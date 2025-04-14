@@ -1,0 +1,192 @@
+[
+    {
+        "LocusId": "D3S1358",
+        "LocusStructure": "(TCTA)*",
+        "ReferenceRegion": "chr3:45540738-45540802",
+        "VariantId": "chr3_45540738_45540802",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "vWA",
+        "LocusStructure": "(TAGA)*",
+        "ReferenceRegion": "chr12:5983977-5984044",
+        "VariantId": "chr12_5983976_5984044",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "D16S539",
+        "LocusStructure": "(GATA)*",
+        "ReferenceRegion": "chr16:86352701-86352745",
+        "VariantId": "chr16_86352701_86352745",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "CSF1PO",
+        "LocusStructure": "(CTAT)*",
+        "ReferenceRegion": "chr5:150076321-150076373",
+        "VariantId": "chr5_150076321_150076373",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "TPOX",
+        "LocusStructure": "(TGAA)*",
+        "ReferenceRegion": "chr2:1489650-1489682",
+        "VariantId": "chr2_1489650_1489682",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "D8S1179",
+        "LocusStructure": "(TATC)*",
+        "ReferenceRegion": "chr8:124894862-124894914",
+        "VariantId": "chr8_124894862_124894914",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "D21S11",
+        "LocusStructure": "(TCTA)+(TCTG)+(TCTA)+TA(TCTA)+TCA(TCTA)+TCCATA(TCTA)+",
+        "ReferenceRegion": [
+            "chr21:19181972-19181988",
+            "chr21:19181988-19182012",
+            "chr21:19182012-19182024",
+            "chr21:19182026-19182038",
+            "chr21:19182041-19182049",
+            "chr21:19182055-19182098" 
+        ],
+        "VariantType": ["Repeat", "Repeat", "Repeat", "Repeat", "Repeat", "Repeat"],
+        "VariantId": [
+            "chr21_19181972_19181988",
+            "chr21_19181988_19182012",
+            "chr21_19182012_19182024",
+            "chr21_19182026_19182038",
+            "chr21_19182041_19182049",
+            "chr21_19182055_19182098"
+        ]
+    },
+    {
+        "LocusId": "D18S51",
+        "LocusStructure": "(AGAA)*",
+        "ReferenceRegion": "chr18:63281666-63281738",
+        "VariantId": "chr18_63281666_63281738",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "DYS391",
+        "LocusStructure": "(TCTA)*",
+        "ReferenceRegion": "chrY:11982088-11982132",
+        "VariantId": "chrY_11982088_11982132",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "D2S441",
+        "LocusStructure": "(TCTA)*",
+        "ReferenceRegion": "chr2:68011946-68011994",
+        "VariantId": "chr2_68011946_68011994",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "D19S433",
+        "LocusStructure": "(CCTT)+CCTA(CCTT)+CTTT(CCTT)+",
+        "ReferenceRegion": [
+            "chr19:29926234-29926278",
+            "chr19:29926282-29926290",
+            "chr19:29926294-29926298"
+        ],
+        "VariantType": ["Repeat", "Repeat", "Repeat"],
+        "VariantId": [
+            "chr19_29926234_29926278",
+            "chr19_29926282_29926290",
+            "chr19_29926294_29926298"
+        ]
+    },    
+    {
+        "LocusId": "TH01",
+        "LocusStructure": "(AATG)*",
+        "ReferenceRegion": "chr11:2171087-2171115",
+        "VariantId": "chr11_2171087_2171115",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "FGA",
+        "LocusStructure": "(GGAA)+(GGAG)+(AAAG)+(AGAA)+(AAAA)+(GAAA)+",
+        "ReferenceRegion": [
+            "chr4:154587736-154587744",
+            "chr4:154587744-154587748",
+            "chr4:154587748-154587804",
+            "chr4:154587804-154587808",
+            "chr4:154587808-154587812",
+            "chr4:154587812-154587823"
+        ],
+        "VariantType": ["Repeat", "Repeat", "Repeat", "Repeat", "Repeat", "Repeat"],
+        "VariantId": [
+            "chr4_154587736_154587744",
+            "chr4_154587744_154587748",
+            "chr4_154587748_154587804",
+            "chr4_154587804_154587808",
+            "chr4_154587808_154587812",
+            "chr4_154587812_154587823"
+        ]
+    },
+    {
+        "LocusId": "D22S1045",
+        "LocusStructure": "(ATT)*",
+        "ReferenceRegion": "chr22:37140286-37140337",
+        "VariantId": "chr22_37140286_37140337",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "D5S818",
+        "LocusStructure": "(ATCT)*",
+        "ReferenceRegion": "chr5:123775555-123775599",
+        "VariantId": "chr5_123775555_123775599",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "D13S317",
+        "LocusStructure": "(TATC)*",
+        "ReferenceRegion": "chr13:82148024-82148068",
+        "VariantId": "chr13_82148024_82148068",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "D7S820",
+        "LocusStructure": "(TATC)*",
+        "ReferenceRegion": "chr7:84160225-84160277",
+        "VariantId": "chr7_84160225_84160277",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "SE33",
+        "LocusStructure": "(CTTT)*",
+        "ReferenceRegion": "chr6:88277143-88277245",
+        "VariantId": "chr6_88277143_88277245",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "D10S1248",
+        "LocusStructure": "(GGAA)*",
+        "ReferenceRegion": "chr10:129294243-129294295",
+        "VariantId": "chr10_129294243_129294295",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "D1S1656",
+        "LocusStructure": "CCTA(TCTA)*",
+        "ReferenceRegion": "chr1:230769615-230769683",
+        "VariantId": "chr1_230769615_230769683",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "D12S391",
+        "LocusStructure": "(AGAT)*",
+        "ReferenceRegion": "chr12:12297019-12297095",
+        "VariantId": "chr12_12297019_12297095",
+        "VariantType": "Repeat"
+    },
+    {
+        "LocusId": "D2S1338",
+        "LocusStructure": "(GGAA)*",
+        "ReferenceRegion": "chr2:218014858-218014950",
+        "VariantId": "chr2_218014858_218014950",
+        "VariantType": "Repeat"
+    }
+]
