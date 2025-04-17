@@ -1,0 +1,13 @@
+{
+  "LocusResults": {},
+  "SampleParameters": {
+    "SampleId": "negative_control",
+    "analysis_date": "2025-04-17 14:51:44"
+  },
+  "SampleContamination": {
+    "contamination_rate": 0.0,
+    "contaminated_markers": [],
+    "total_valid_markers": 0,
+    "total_contaminated_markers": 0
+  }
+}

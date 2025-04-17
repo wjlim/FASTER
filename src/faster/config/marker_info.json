@@ -1,0 +1,114 @@
+{
+    "markers": {
+        "D3S1358": {
+            "position": "chr3:45540738-45540802",
+            "motif": "TCTATCTG[TCTA]*"
+        },
+        "vWA": {
+            "position": "chr12:5983976-5984044",
+            "motif": "[TAGA]*[CAGA]*TAGA"
+        },
+        "D16S539": {
+            "position": "chr16:86352701-86352745",
+            "motif": "[GATA]*"
+        },
+        "CSF1PO": {
+            "position": "chr5:150076323-150076375",
+            "motif": "[ATCT]*"
+        },
+        "TPOX": {
+            "position": "chr2:1489652-1489684",
+            "motif": "[AATG]*"
+        },
+        "D8S1179": {
+            "position": "chr8:124894864-124894916",
+            "motif": "TCTATCTG[TCTA]*"
+        },
+        "D21S11": {
+            "position": "chr21:19181972-19182099",
+            "motif": "[TCTA]+[TCTG]+[TCTA]+ta[TCTA]+tca[TCTA]+tccata[TCTA]+"
+        },
+        "D18S51": {
+            "position": "chr18:63281666-63281738",
+            "motif": "[AGAA]*"
+        },
+        "DYS391": {
+            "position": "chrY:11982088-11982132",
+            "motif": "[TCTA]*"
+        },
+        "D2S441": {
+            "position": "chr2:68011947-68011994",
+            "motif": "[TCTA]*"
+        },
+        "D19S433": {
+            "position": "chr19:29926234-29926298",
+            "motif": "[CCTT]*cctaCCTTctttCCTT"
+        },
+        "TH01": {
+            "position": "chr11:2171087-2171115",
+            "motif": "[AATG]*"
+        },
+        "FGA": {
+            "position": "chr4:154587735-154587823",
+            "motif": "[GGAA]+GGAG[AAAG]+AGAAAAAA[GAAA]+"
+        },
+        "D22S1045": {
+            "position": "chr22:37140286-37140337",
+            "motif": "[ATT]+ACT[ATT]+"
+        },
+        "D5S818": {
+            "position": "chr5:123775555-123775599",
+            "motif": "[ATCT]*"
+        },
+        "D13S317": {
+            "position": "chr13:82148024-82148068",
+            "motif": "[TATC]*"
+        },
+        "D7S820": {
+            "position": "chr7:84160225-84160277",
+            "motif": "[TATC]*"
+        },
+        "SE33": {
+            "position": "chr6:88277143-88277245",
+            "motif": "[CTTT]+TT[CTTT]+"
+        },
+        "D10S1248": {
+            "position": "chr10:129294243-129294295",
+            "motif": "[GGAA]*"
+        },
+        "D1S1656": {
+            "position": "chr1:230769615-230769683",
+            "motif": "CCTA[TCTA]*"
+        },
+        "D12S391": {
+            "position": "chr12:12297019-12297095",
+            "motif": "[AGAT]+[AGAC]+AGAT"
+        },
+        "D2S1338": {
+            "position": "chr2:218014858-218014950",
+            "motif": "[GGAA]+GGAC[GGAA]+[GGCA]+"
+        },
+        "AMEL": {
+            "position": "chrX:11293412-11300761",
+            "motif": "null"
+        },
+        "Yindel": {
+            "position": "chrY:6865917-6911752",
+            "motif": "null"
+        }
+    },
+    "dye_cutoffs": {
+        "B": {"min": 2500, "max": 50000},
+        "G": {"min": 5000, "max": 50000},
+        "Y": {"min": 9000, "max": 50000},
+        "R": {"min": 1000, "max": 50000},
+        "P": {"min": 1000, "max": 50000}
+    },
+    "marker_order": [
+        "CSF1PO", "D10S1248", "D12S391", "D13S317", "D16S539",
+        "D18S51", "D19S433", "D1S1656", "D21S11", "D22S1045",
+        "D2S1338", "D2S441", "D3S1358", "D5S818", "D7S820",
+        "D8S1179", "DYS391", "FGA", "SE33", "TH01",
+        "TPOX", "vWA", "AMEL", "Yindel"
+    ]
+} 
