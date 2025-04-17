@@ -8,41 +8,33 @@ from datetime import datetime
 class ResultGenerator:
     """Generates standardized JSON results for STR analysis."""
     
-    def __init__(self):
-        """Initialize the result generator."""
-        self.marker_info = {
-            "CSF1PO": {"chr": "chr5", "start": 150076323, "end": 150076375, "motif": "[ATCT]*"},
-            "D10S1248": {"chr": "chr10", "start": 129294243, "end": 129294295, "motif": "[GGAA]*"},
-            "D12S391": {"chr": "chr12", "start": 12297019, "end": 12297095, "motif": "[AGAT]+[AGAC]+AGAT"},
-            "D13S317": {"chr": "chr13", "start": 82148024, "end": 82148068, "motif": "[TATC]*"},
-            "D16S539": {"chr": "chr16", "start": 86352701, "end": 86352745, "motif": "[GATA]*"},
-            "D18S51": {"chr": "chr18", "start": 63281666, "end": 63281738, "motif": "[AGAA]*"},
-            "D19S433": {"chr": "chr19", "start": 29926234, "end": 29926298, "motif": "[CCTT]*cctaCCTTctttCCTT"},
-            "D1S1656": {"chr": "chr1", "start": 230769615, "end": 230769683, "motif": "CCTA[TCTA]*"},
-            "D21S11": {"chr": "chr21", "start": 19181972, "end": 19182099, "motif": "[TCTA]+[TCTG]+[TCTA]+ta[TCTA]+tca[TCTA]+tccata[TCTA]+"},
-            "D22S1045": {"chr": "chr22", "start": 37140286, "end": 37140337, "motif": "[ATT]+ACT[ATT]+"},
-            "D2S1338": {"chr": "chr2", "start": 218014858, "end": 218014950, "motif": "[GGAA]+GGAC[GGAA]+[GGCA]+"},
-            "D2S441": {"chr": "chr2", "start": 68011947, "end": 68011994, "motif": "[TCTA]*"},
-            "D3S1358": {"chr": "chr3", "start": 45540738, "end": 45540802, "motif": "TCTATCTG[TCTA]*"},
-            "D5S818": {"chr": "chr5", "start": 123775555, "end": 123775599, "motif": "[ATCT]*"},
-            "D7S820": {"chr": "chr7", "start": 84160225, "end": 84160277, "motif": "[TATC]*"},
-            "D8S1179": {"chr": "chr8", "start": 124894864, "end": 124894916, "motif": "TCTATCTG[TCTA]*"},
-            "FGA": {"chr": "chr4", "start": 154587735, "end": 154587823, "motif": "[GGAA]+GGAG[AAAG]+AGAAAAAA[GAAA]+"},
-            "SE33": {"chr": "chr6", "start": 88277143, "end": 88277245, "motif": "[CTTT]+TT[CTTT]+"},
-            "TH01": {"chr": "chr11", "start": 2171087, "end": 2171115, "motif": "[AATG]*"},
-            "TPOX": {"chr": "chr2", "start": 1489652, "end": 1489684, "motif": "[AATG]*"},
-            "vWA": {"chr": "chr12", "start": 5983976, "end": 5984044, "motif": "[TAGA]*[CAGA]*TAGA"},
-            "AMEL": {"chr": "chrX", "start": 11293412, "end": 11300761, "motif": "null"}
-        }
+    def __init__(self, config_path: Optional[str | Path] = None):
+        """
+        Initialize the result generator.
         
-        # Dye-specific height cutoffs
-        self.dye_cutoffs = {
-            "B": {"min": 2500, "max": 50000},  # Blue
-            "G": {"min": 5000, "max": 50000},  # Green
-            "Y": {"min": 9000, "max": 50000},  # Yellow
-            "R": {"min": 1000, "max": 50000},  # Red
-            "P": {"min": 1000, "max": 50000},  # Purple
-        }
+        Args:
+            config_path: Path to marker configuration file (JSON). If None, uses default config.
+        """
+        # Load marker configuration
+        if config_path is None:
+            config_path = Path(__file__).parent.parent / 'config' / 'marker_info.json'
+        
+        with open(config_path) as f:
+            config = json.load(f)
+            
+        self.marker_info = {}
+        for marker, info in config['markers'].items():
+            pos = info['position'].split(':')
+            chr_pos = pos[0]
+            start_end = pos[1].split('-')
+            self.marker_info[marker] = {
+                "chr": chr_pos,
+                "start": int(start_end[0]),
+                "end": int(start_end[1]),
+                "motif": info['motif']
+            }
+            
+        self.dye_cutoffs = config['dye_cutoffs']
 
     def _calculate_stats(self, peaks: List[Dict]) -> Dict[str, Any]:
         """Calculate statistics for a group of peaks."""

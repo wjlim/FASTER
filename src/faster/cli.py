@@ -55,7 +55,7 @@ def main():
         # Initialize components
         peak_caller = PeakCaller(config_path=args.config)
         contamination_detector = ContaminationDetector()
-        result_generator = ResultGenerator()
+        result_generator = ResultGenerator(config_path=args.config)
         plotter = PeakPlotter(max_height=args.max_height)
         report_generator = ReportGenerator()
         
