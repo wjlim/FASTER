@@ -119,15 +119,3 @@ output_directory/
   }
 }
 ```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License
-
-## Support
-
-For support and questions, please create an issue in the GitHub repository.
