@@ -27,12 +27,6 @@ A robust tool for analyzing Short Tandem Repeat (STR) data from Thermofisher ele
 - Python 3.10 or higher
 - pip package manager
 
-### Installation from PyPI
-
-```bash
-pip install faster
-```
-
 ### Installation from Source
 
 ```bash
