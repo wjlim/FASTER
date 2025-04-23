@@ -1,48 +1,33 @@
-# FASTER (Forensic Analysis of STRs with Thermofisher Electrophoresis Result)
+# FASTER
 
-A robust tool for analyzing Short Tandem Repeat (STR) data from Thermofisher electrophoresis results, featuring advanced contamination detection and interactive visualization.
+**F**orensic **A**nalysis of **ST**Rs with Th**ER**mofisher Electrophoresis Result
+
+A robust tool for analyzing Short Tandem Repeat (STR) data from Thermofisher electrophoresis results.
 
 ## Features
 
 - **Peak Analysis**
   - Height-based peak detection with dye-specific thresholds
   - Main profile selection (top 2 peaks by height)
-  - Maximum 4 peaks per marker consideration
   - Support for multiple dye channels (B, G, Y, R, P)
 
 - **Contamination Detection**
   - Height-based clustering analysis
   - Relative distance calculation between clusters
   - Automatic contamination peak identification
-  - Cluster distance reporting for contaminated markers
 
-- **Interactive Visualization**
-  - Dynamic HTML reports with plotly graphs
-  - Color-coded peak display:
-    - Main Profile peaks (green)
-    - Contamination peaks (red)
-    - Other peaks (blue)
-  - Detailed hover information including:
-    - Allele values
-    - Peak heights
-    - Size information
-    - Dye channel and limits
-
-- **Quality Control**
-  - Dye-specific height thresholds from configuration
-  - Height standard deviation analysis
-  - Comprehensive contamination reporting
-  - Marker-level quality metrics
+- **Visualization**
+  - Interactive HTML reports with plotly graphs
+  - Static PNG plots (optional)
+  - Detailed peak information display
 
 ## Installation
 
 ### Prerequisites
-
 - Python 3.10 or higher
 - pip package manager
 
-### Installation from Source
-
+### Setup
 ```bash
 git clone https://github.com/wjlim/FASTER.git
 cd FASTER
@@ -52,65 +37,56 @@ pip install .
 ## Usage
 
 ### Basic Command
-
 ```bash
 faster -i <input_file> -o <output_directory>
 ```
 
-### Command Line Options
-
+### Options
 - `-i, --input`: Input data file (tab-separated)
 - `-o, --output`: Output directory
 - `--config`: Path to marker configuration file (optional)
-- `--plot`: Generate static PNG plots for each marker
-- `--plotly`: Generate interactive plots in HTML report (default: True)
+- `--plot`: Generate static PNG plots
+- `--plotly`: Generate interactive plots (default: True)
 
 ### Example
-
 ```bash
 # Basic usage
 faster -i example/input.txt -o example_out/
 
 # With custom configuration
 faster -i example/input.txt -o example_out/ --config path/to/marker_info.json
-
-# Generate both static and interactive plots
-faster -i example/input.txt -o example_out/ --plot
 ```
 
 ## Output Files
 
-The tool generates the following outputs:
-
 ```
 output_directory/
-├── {sample_name}.STR_analysis.json    # Analysis results in JSON format
-├── {sample_name}.STR_report.html      # Interactive HTML report
-└── {sample_name}_peaks/               # Static plot images (if --plot is used)
+├── {sample_name}.STR_analysis.json    # Analysis results
+├── {sample_name}.STR_report.html      # Interactive report
+└── {sample_name}_peaks/               # Static plots (optional)
     └── {sample_name}_{marker}_peaks.png
 ```
 
-### HTML Report Features
+## Algorithm
 
-The interactive HTML report includes:
+### Peak Analysis
+1. **Height-based Filtering**
+   - Apply dye-specific thresholds
+   - Filter peaks based on height limits
 
-- Sample-level summary
-- Marker-specific analysis views
-- Interactive plotly graphs showing:
-  - Main Profile peaks (green dots)
-  - Contamination peaks (red dots)
-  - Other peaks (blue dots)
-  - Connecting lines between peaks
-- Hover information for each peak:
-  - Allele value
-  - Peak height
-  - Size (bp)
-  - Dye channel and limits
-- Cluster distance display for contaminated markers
-- Easy navigation between markers
+2. **Main Profile Selection**
+   - Select top 2 peaks by height
+   - Represent primary genotype
+
+3. **Contamination Detection**
+   - Calculate height standard deviation
+   - Perform clustering analysis
+   - Compute relative distance:
+     ```
+     relative_distance = cluster_distance / height_std_dev
+     ```
 
 ### JSON Results Structure
-
 ```json
 {
   "LocusResults": {
@@ -144,40 +120,8 @@ The interactive HTML report includes:
 }
 ```
 
-## Algorithm Details
-
-### Peak Analysis
-
-1. **Height-based Filtering**
-   - Apply dye-specific thresholds from marker_info.json
-   - Filter peaks based on minimum and maximum height limits
-   - Normalize peak heights within valid range
-
-2. **Main Profile Selection**
-   - Select top 2 peaks by height as main profile
-   - These peaks represent the primary genotype
-   - Annotated in green in visualizations
-
-3. **Contamination Detection**
-   - Calculate height standard deviation
-   - Perform height-based clustering analysis
-   - Compute relative distance between clusters:
-     ```
-     relative_distance = cluster_distance / height_std_dev
-     ```
-   - Identify contamination peaks based on cluster analysis
-   - Mark contamination peaks in red in visualizations
-
-4. **Quality Control**
-   - Monitor peak height distribution
-   - Track contamination rates
-   - Calculate height standard deviation
-   - Apply dye-specific quality thresholds
-
 ## Support
-
 For support and questions, please create an issue in the repository.
 
 ## License
-
 This project is licensed under the MIT License - see the LICENSE file for details.
