@@ -56,7 +56,7 @@ def main():
         peak_caller = PeakCaller(config_path=args.config)
         contamination_detector = ContaminationDetector()
         result_generator = ResultGenerator(config_path=args.config)
-        plotter = PeakPlotter(max_height=args.max_height)
+        plotter = PeakPlotter(config_path=args.config)
         report_generator = ReportGenerator()
         
         # Read input data
