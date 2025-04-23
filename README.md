@@ -237,4 +237,7 @@ Note: All floating-point values in the output are rounded to 6 decimal places fo
 For support and questions, please create an issue in the repository.
 
 ## License
+
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+Note: This project uses ExpansionHunter binary which is licensed under the PolyForm Strict License 1.0.0. For more details about ExpansionHunter's license, please visit [ExpansionHunter's repository](https://github.com/Illumina/ExpansionHunter).
