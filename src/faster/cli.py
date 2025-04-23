@@ -1,47 +1,144 @@
+import sys
 import argparse
+import json
+import subprocess
+import logging
 import pandas as pd
 from pathlib import Path
-from typing import Optional
 from .core.peak_caller import PeakCaller
 from .core.contamination import ContaminationDetector
 from .utils.plotting import PeakPlotter
 from .utils.results import ResultGenerator
 from .utils.report_generator import ReportGenerator
+from .core.compare import ResultComparator
+from .core.vectorizer import GenotypeVectorizer
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 def main():
     """Main entry point for the FASTER package."""
     parser = argparse.ArgumentParser(
-        description='Forensic Analysis of STRs with Thermofisher Electrophoresis Result'
+        description='Forensic Analysis of STRs with Thermofisher Electrophoresis Results and ExpansionHunter'
+    )
+
+    subparsers = parser.add_subparsers(title='subcommands', help='sub-command help', dest='command', required=True)
+    
+    # STR analysis subcommand
+    str_parser = subparsers.add_parser('str', help='STR analysis help')
+    str_parser.add_argument('-i', '--input',
+                        required=True,
+                        help='Input data file (tab-separated)')
+    str_parser.add_argument('-o', '--output',
+                        required=True,
+                        help='Output directory')
+    str_parser.add_argument('--config',
+                        help='Path to marker configuration file (JSON)',
+                        default=f"{Path(__file__).parent}/config/marker_info.json")
+    str_parser.add_argument('--plot',
+                        action='store_true',
+                        help='Generate static PNG plots for each marker')
+    str_parser.add_argument('--plotly',
+                        action='store_true',
+                        default=True,
+                        help='Generate interactive Plotly plots in HTML report (default: True)')
+
+    # ExpansionHunter analysis subcommand
+    exhunter_parser = subparsers.add_parser('exhunter', help='ExpansionHunter analysis help')
+    exhunter_parser.add_argument('-i', '--input_bam',
+                        required=True,
+                        help='Path to the input BAM file')
+    exhunter_parser.add_argument('-r', '--reference',
+                        required=True,
+                        help='Path to the reference fasta file')
+    exhunter_parser.add_argument('-o', '--output_prefix',
+                        required=True,
+                        help='Output prefix for ExpansionHunter results')
+
+    # Compare results subcommand
+    compare_parser = subparsers.add_parser('compare', help='Compare STR analysis and ExpansionHunter results')
+    compare_parser.add_argument('-i', '--str_json',
+                        required=True,
+                        help='Path to STR analysis JSON file')
+    compare_parser.add_argument('-j', '--eh_json',
+                        required=True,
+                        help='Path to ExpansionHunter JSON file')
+    compare_parser.add_argument('-o', '--output_prefix',
+                        required=True,
+                        help='Output prefix for comparison results')
+
+    # Vectorize subcommand
+    vectorize_parser = subparsers.add_parser(
+        'vectorize',
+        help='Vectorize genotype data from STR or ExpansionHunter analysis'
+    )
+    vectorize_parser.add_argument(
+        '-i', '--input',
+        required=True,
+        help='Input JSON file from STR or ExpansionHunter analysis'
+    )
+    vectorize_parser.add_argument(
+        '-o', '--output',
+        required=True,
+        help='Output text file to save vectorized results'
+    )
+    vectorize_parser.add_argument(
+        '-t', '--type',
+        choices=['str', 'eh'],
+        required=True,
+        help='Input type: str (STR analysis) or eh (ExpansionHunter)'
     )
     
-    parser.add_argument('-i', '--input',
-                       required=True,
-                       help='Input data file (tab-separated)')
-    
-    parser.add_argument('-o', '--output',
-                       required=True,
-                       help='Output directory')
-    
-    parser.add_argument('--config',
-                       help='Path to marker configuration file (JSON)',
-                       default=None)
-    
-    parser.add_argument('--max-height',
-                       type=int,
-                       default=50000,
-                       help='Maximum peak height cutoff (default: 50000)')
-    
-    parser.add_argument('--plot',
-                       action='store_true',
-                       help='Generate static PNG plots for each marker')
-    
-    parser.add_argument('--plotly',
-                       action='store_true',
-                       default=True,
-                       help='Generate interactive Plotly plots in HTML report (default: True)')
+    # Compare vectors subcommand
+    compare_vectors_parser = subparsers.add_parser(
+        'compare-vectors',
+        help='Compare two compact vector files'
+    )
+    compare_vectors_parser.add_argument(
+        '-i', '--vector1',
+        required=True,
+        help='First vector file'
+    )
+    compare_vectors_parser.add_argument(
+        '-j', '--vector2',
+        required=True,
+        help='Second vector file'
+    )
+    compare_vectors_parser.add_argument(
+        '-o', '--output',
+        help='Output JSON file for comparison results'
+    )
     
     args = parser.parse_args()
     
+    if args.command == 'str':
+        process_str_analysis(args)
+    elif args.command == 'exhunter':
+        process_exhunter_analysis(args)
+    elif args.command == 'compare':
+        process_compare(args)
+    elif args.command == 'vectorize':
+        run_vectorize(args)
+    elif args.command == 'compare-vectors':
+        vectorizer = GenotypeVectorizer()
+        result = vectorizer.compare_vectors(args.vector1, args.vector2)
+        
+        # Print comparison to console
+        vectorizer.print_comparison(args.vector1, args.vector2)
+        
+        # Save comparison results to JSON if output path is provided
+        if args.output:
+            with open(args.output, 'w') as f:
+                json.dump(result.dict(), f, indent=2)
+            logger.info(f"Comparison results saved to {args.output}")
+
+def process_str_analysis(args):
+    """Process STR analysis command."""
     # Create output directory
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -108,11 +205,11 @@ def main():
             # Store results
             all_results.append(results)
             
-            print(f"Processed sample: {sample_name}")
-            print(f"Results saved to: {output_dir}")
+            logger.info(f"Processed sample: {sample_name}")
+            logger.info(f"Results saved to: {output_dir}")
             if args.plot:
-                print(f"Static plots saved to: {plot_dir}")
-            print("---")
+                logger.info(f"Static plots saved to: {plot_dir}")
+            logger.info("---")
         
         # Generate combined HTML report with plotly plots
         report_generator.generate_combined_report(
@@ -121,11 +218,106 @@ def main():
             output_dir=output_dir,
             plotly_plots=all_plotly_plots if args.plotly else {}
         )
-        print(f"Combined HTML report generated: {output_dir / 'STR_analysis_report.html'}")
+        logger.info(f"Combined HTML report generated: {output_dir / 'STR_analysis_report.html'}")
             
     except Exception as e:
-        print(f"Error: {str(e)}")
+        logger.error(f"Error: {str(e)}")
         raise
+
+def process_exhunter_analysis(args):
+    """Process ExpansionHunter analysis command."""
+    try:
+        # Set paths for ExpansionHunter binary and variant catalog
+        package_root = Path(__file__).parent.parent.parent  # FASTER root directory
+        exhunter_binary = package_root / 'bin' / 'ExpansionHunter'
+        variant_catalog = package_root / 'src' / 'variant_catalog.thermofisher_24markers.json'
+
+        # Verify binary and variant catalog exist
+        if not exhunter_binary.exists():
+            raise FileNotFoundError(f"ExpansionHunter binary not found at: {exhunter_binary}")
+        if not variant_catalog.exists():
+            raise FileNotFoundError(f"Variant catalog not found at: {variant_catalog}")
+
+        # Extract directory from output_prefix if it contains a path
+        output_prefix = Path(args.output_prefix)
+        if '/' in str(output_prefix):
+            output_dir = output_prefix.parent
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Prepare command
+        cmd = [
+            str(exhunter_binary),
+            '--reads', str(args.input_bam),
+            '--reference', str(args.reference),
+            '--variant-catalog', str(variant_catalog),
+            '--output-prefix', str(args.output_prefix)
+        ]
+
+        # Run ExpansionHunter
+        logger.info("Running ExpansionHunter...")
+        logger.debug(f"Command: {' '.join(cmd)}")
+        
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        
+        logger.info("ExpansionHunter analysis completed successfully")
+        logger.info(f"Results saved to: {args.output_prefix}.*")
+        
+    except FileNotFoundError as e:
+        logger.error(f"Error: {str(e)}")
+        raise
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error running ExpansionHunter: {str(e)}")
+        logger.error(f"ExpansionHunter stderr output:\n{e.stderr}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        raise
+
+def process_compare(args):
+    """Process comparison command."""
+    try:
+        comparator = ResultComparator()
+        results = comparator.compare_results(args.str_json, args.eh_json)
+        comparator.save_results(results, args.output_prefix)
+        
+    except Exception as e:
+        logger.error(f"Error during comparison: {str(e)}")
+        raise
+
+def run_vectorize(args):
+    """Run vectorization of genotype data."""
+    try:
+        # Load input data
+        with open(args.input) as f:
+            data = json.load(f)
+            
+        # Get sample_id from data or filename
+        if args.type == 'eh':
+            sample_id = data.get('SampleParameters', {}).get('SampleId', '')
+        else:  # str
+            sample_id = data.get('SampleParameters', {}).get('sample_id', '')
+            
+        # If no sample_id found in data, use input filename
+        if not sample_id:
+            sample_id = Path(args.input).stem
+            
+        # Initialize vectorizer
+        vectorizer = GenotypeVectorizer()
+        
+        # Vectorize based on input type
+        if args.type == 'str':
+            result = vectorizer.vectorize_str(data, sample_id)
+        else:  # eh
+            result = vectorizer.vectorize_eh(data, sample_id)
+            
+        # Save results
+        vectorizer.save_vector(result, args.output)
+        
+        logging.info(f"Successfully vectorized data and saved to {args.output}")
+        
+    except Exception as e:
+        logging.error(f"Error during vectorization: {str(e)}")
+        sys.exit(1)
 
 if __name__ == '__main__':
     main() 

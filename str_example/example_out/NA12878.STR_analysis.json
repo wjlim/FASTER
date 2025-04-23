@@ -211,32 +211,7 @@
               "size": 144.64
             }
           ],
-          "contamination": {
-            "is_contaminated": true,
-            "main_profile_peaks": [
-              {
-                "allele": "12",
-                "height": 32238.0,
-                "size": 142.44,
-                "relative_height": 100.0
-              },
-              {
-                "allele": "14",
-                "height": 31805.0,
-                "size": 150.04,
-                "relative_height": 98.66
-              }
-            ],
-            "contamination_peaks": [
-              {
-                "allele": "12.2",
-                "height": 20012.0,
-                "size": 144.64,
-                "relative_height": 62.08
-              }
-            ],
-            "relative_distance": 0.62
-          }
+          "contamination": null
         }
       }
     },
@@ -481,32 +456,7 @@
               "size": 144.64
             }
           ],
-          "contamination": {
-            "is_contaminated": true,
-            "main_profile_peaks": [
-              {
-                "allele": "16",
-                "height": 23893.0,
-                "size": 127.47,
-                "relative_height": 100.0
-              },
-              {
-                "allele": "17",
-                "height": 22164.0,
-                "size": 131.43,
-                "relative_height": 92.76
-              }
-            ],
-            "contamination_peaks": [
-              {
-                "allele": "20.1",
-                "height": 12911.0,
-                "size": 144.64,
-                "relative_height": 54.04
-              }
-            ],
-            "relative_distance": 0.56
-          }
+          "contamination": null
         }
       }
     },
@@ -686,32 +636,7 @@
               "size": 360.82
             }
           ],
-          "contamination": {
-            "is_contaminated": true,
-            "main_profile_peaks": [
-              {
-                "allele": "17",
-                "height": 9981.0,
-                "size": 361.79,
-                "relative_height": 100.0
-              },
-              {
-                "allele": "28.2",
-                "height": 6545.0,
-                "size": 408.94,
-                "relative_height": 65.57
-              }
-            ],
-            "contamination_peaks": [
-              {
-                "allele": "16.3",
-                "height": 3164.0,
-                "size": 360.82,
-                "relative_height": 31.7
-              }
-            ],
-            "relative_distance": 0.38
-          }
+          "contamination": null
         }
       }
     },
@@ -828,17 +753,11 @@
   },
   "SampleParameters": {
     "SampleId": "NA12878",
-    "analysis_date": "2025-04-17 17:02:06"
+    "analysis_date": "2025-04-23 15:27:25"
   },
   "SampleContamination": {
-    "contamination_rate": 27.3,
+    "contamination_rate": 13.6,
     "contaminated_markers": [
-      {
-        "marker": "D19S433",
-        "main_profile": "12/14",
-        "contamination_peaks": "12.2(62.1%)",
-        "relative_distance": 0.62
-      },
       {
         "marker": "D1S1656",
         "main_profile": "15.3/14",
@@ -852,25 +771,13 @@
         "relative_distance": 0.13
       },
       {
-        "marker": "D3S1358",
-        "main_profile": "16/17",
-        "contamination_peaks": "20.1(54.0%)",
-        "relative_distance": 0.56
-      },
-      {
         "marker": "D8S1179",
         "main_profile": "12/12",
         "contamination_peaks": "11(21.7%)",
         "relative_distance": 0.22
-      },
-      {
-        "marker": "SE33",
-        "main_profile": "17/28.2",
-        "contamination_peaks": "16.3(31.7%)",
-        "relative_distance": 0.38
       }
     ],
     "total_valid_markers": 22,
-    "total_contaminated_markers": 6
+    "total_contaminated_markers": 3
   }
 }

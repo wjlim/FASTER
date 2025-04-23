@@ -21,6 +21,17 @@ A robust tool for analyzing Short Tandem Repeat (STR) data from Thermofisher ele
   - Static PNG plots (optional)
   - Detailed peak information display
 
+- **ExpansionHunter Integration**
+  - Analysis of BAM files using ExpansionHunter
+  - Comparison with STR analysis results
+  - Combined result reporting
+
+- **Genotype Vectorization**
+  - Convert genotypes to compact vector representation
+  - Support for both STR and ExpansionHunter results
+  - Polar and Cartesian coordinate systems
+  - Vector comparison and similarity scoring
+
 ## Installation
 
 ### Prerequisites
@@ -36,57 +47,49 @@ pip install .
 
 ## Usage
 
-### Basic Command
+### STR Analysis
 ```bash
-faster -i <input_file> -o <output_directory>
-```
-
-### Options
-- `-i, --input`: Input data file (tab-separated)
-- `-o, --output`: Output directory
-- `--config`: Path to marker configuration file (optional)
-- `--plot`: Generate static PNG plots
-- `--plotly`: Generate interactive plots (default: True)
-
-### Example
-```bash
-# Basic usage
-faster -i example/input.txt -o example_out/
+# Basic STR analysis
+faster str -i <input_file> -o <output_directory>
 
 # With custom configuration
-faster -i example/input.txt -o example_out/ --config path/to/marker_info.json
+faster str -i <input_file> -o <output_directory> --config path/to/marker_info.json
 ```
 
-## Output Files
-
-```
-output_directory/
-├── {sample_name}.STR_analysis.json    # Analysis results
-├── {sample_name}.STR_report.html      # Interactive report
-└── {sample_name}_peaks/               # Static plots (optional)
-    └── {sample_name}_{marker}_peaks.png
+### ExpansionHunter Analysis
+```bash
+# Run ExpansionHunter analysis
+faster exhunter -i <input_bam> -r <reference_fasta> -o <output_prefix>
 ```
 
-## Algorithm
+### Compare Results
+```bash
+# Compare STR and ExpansionHunter results
+faster compare -i <str_json> -j <eh_json> -o <output_prefix>
+```
 
-### Peak Analysis
-1. **Height-based Filtering**
-   - Apply dye-specific thresholds
-   - Filter peaks based on height limits
+### Vectorization
+```bash
+# Vectorize STR results
+faster vectorize -i <input_json> -o <output_file> -t str
 
-2. **Main Profile Selection**
-   - Select top 2 peaks by height
-   - Represent primary genotype
+# Vectorize ExpansionHunter results
+faster vectorize -i <input_json> -o <output_file> -t eh
+```
 
-3. **Contamination Detection**
-   - Calculate height standard deviation
-   - Perform clustering analysis
-   - Compute relative distance:
-     ```
-     relative_distance = cluster_distance / height_std_dev
-     ```
+### Vector Comparison
+```bash
+# Compare two vectors
+faster compare-vectors -i <vector1.json> -j <vector2.json>
 
-### JSON Results Structure
+# Compare and save results to JSON
+faster compare-vectors -i <vector1.json> -j <vector2.json> -o <comparison.json>
+```
+
+## Output Formats by Submodule
+
+### 1. STR Analysis (`faster str`)
+Output file: `{sample_name}.STR_analysis.json`
 ```json
 {
   "LocusResults": {
@@ -110,15 +113,125 @@ output_directory/
       }
     }
   },
-  "SampleParameters": {...},
-  "SampleContamination": {
-    "contamination_rate": float,
-    "contaminated_markers": [...],
-    "total_valid_markers": int,
-    "total_contaminated_markers": int
+  "SampleParameters": {
+    "sample_id": str,
+    "analysis_date": str,
+    "sample_name": str,
+    "contamination_summary": {
+      "contaminated_markers": [...],
+      "total_markers": int,
+      "contamination_percentage": float,
+      "mean_contamination_rate": float
+    }
   }
 }
 ```
+
+### 2. ExpansionHunter Analysis (`faster exhunter`)
+Output files:
+- `{output_prefix}.vcf`: Variant calls in VCF format
+- `{output_prefix}.json`: Detailed analysis results
+```json
+{
+  "LocusResults": {
+    "marker_name": {
+      "Variants": {
+        "variant_id": {
+          "Genotype": str,
+          "RepeatUnit": str,
+          "RepeatSize": int
+        }
+      }
+    }
+  },
+  "SampleParameters": {
+    "SampleId": str,
+    "Gender": str
+  }
+}
+```
+
+### 3. Results Comparison (`faster compare`)
+Output file: `{output_prefix}.comparison.json`
+```json
+{
+  "sample_id": str,
+  "str_results": {
+    "marker_name": {
+      "genotype": str,
+      "allele_count": int
+    }
+  },
+  "eh_results": {
+    "marker_name": {
+      "genotype": str,
+      "allele_count": int
+    }
+  },
+  "comparison_summary": {
+    "matching_markers": [...],
+    "mismatched_markers": [...],
+    "concordance_rate": float
+  }
+}
+```
+
+### 4. Genotype Vectorization (`faster vectorize`)
+Output file: `{output_file}.json`
+```json
+{
+  "sample_id": str,
+  "source_type": str,
+  "markers": [
+    {
+      "marker": str,
+      "allele1": float,
+      "allele2": float
+    }
+  ],
+  "vector_properties": {
+    "magnitude": float,
+    "angle_radians": float,
+    "angle_degrees": float
+  },
+  "markers_used": int,
+  "compact_vector": str,
+  "cartesian_coordinates": {
+    "x": float,
+    "y": float
+  }
+}
+```
+
+### 5. Vector Comparison (`faster compare-vectors`)
+Output file: `{output_file}.json`
+```json
+{
+  "vector1": {
+    "sample_id": str,
+    "source_type": str,
+    "markers": [...],
+    "vector_properties": {...},
+    "cartesian_coordinates": {...}
+  },
+  "vector2": {
+    "sample_id": str,
+    "source_type": str,
+    "markers": [...],
+    "vector_properties": {...},
+    "cartesian_coordinates": {...}
+  },
+  "comparison_metrics": {
+    "euclidean_distance": float,
+    "magnitude_difference": float,
+    "angle_difference_radians": float,
+    "angle_difference_degrees": float,
+    "similarity_score": float
+  }
+}
+```
+
+Note: All floating-point values in the output are rounded to 6 decimal places for consistency.
 
 ## Support
 For support and questions, please create an issue in the repository.

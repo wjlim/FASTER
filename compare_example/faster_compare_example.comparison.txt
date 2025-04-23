@@ -1,0 +1,16 @@
+Comparison Results for NA12878
+==================================================
+
+Summary:
+Total markers analyzed: 21
+Matching: 19
+Mismatching: 2
+Match ratio: 90.48%
+Missing in ExpansionHunter: 1
+
+Mismatching Markers:
+D1S1656: STR=14/15.3, EH=13.0/15.0
+D21S11: STR=26/30, EH=29.0/31.0
+
+Markers not available in ExpansionHunter:
+AMEL: STR=X
