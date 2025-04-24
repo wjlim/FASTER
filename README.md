@@ -2,7 +2,7 @@
 
 ## **F**orensic **A**nalysis of **S**hort **T**and**E**m **R**epeats
 
-A robust tool for analyzing Short Tandem Repeat (STR) data from Thermofisher electrophoresis results.
+A robust tool for analyzing Short Tandem Repeat (STR) data from Thermofisher electrophoresis and Illumina NGS results.
 
 ## Features
 
