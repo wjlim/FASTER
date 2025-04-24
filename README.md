@@ -1,6 +1,6 @@
 # FASTER
 
-**F**orensic **A**nalysis of **ST**Rs with Th**ER**mofisher Electrophoresis Result
+## **F**orensic **A**nalysis of **S**hort **T**and**E**m **R**epeats
 
 A robust tool for analyzing Short Tandem Repeat (STR) data from Thermofisher electrophoresis results.
 
