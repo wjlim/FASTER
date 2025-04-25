@@ -15,9 +15,19 @@ from ..models.data_models import (
 logger = logging.getLogger(__name__)
 
 class GenotypeVectorizer:
-    def __init__(self):
-        """Initialize the GenotypeVectorizer class."""
-        self.markers = []
+    def __init__(self, config_path: Optional[str] = None):
+        """Initialize the GenotypeVectorizer class.
+        
+        Args:
+            config_path: Optional path to marker configuration file
+        """
+        if config_path is None:
+            config_path = str(Path(__file__).parent.parent / 'config' / 'marker_info.json')
+            
+        with open(config_path) as f:
+            config = json.load(f)
+            self.vectorize_markers = config['vectorize_markers']
+            
         self.vector_size = 2  # Each marker has 2 alleles
 
     def _parse_genotype(self, genotype: str) -> Tuple[float, float]:
@@ -103,15 +113,15 @@ class GenotypeVectorizer:
         return round(float(magnitude), 6), round(float(angle), 6)
 
     def _calculate_vector_properties(self, vector: np.ndarray) -> VectorProperties:
-        """Calculate magnitude and angle of the 44-dimensional vector.
+        """Calculate magnitude and angle of the vector.
         
         Args:
-            vector: 44-dimensional numpy array (22 markers x 2 alleles)
+            vector: numpy array (n_markers x 2 alleles)
             
         Returns:
             VectorProperties object containing magnitude and angles
         """
-        # Reshape into 22x2 matrix
+        # Reshape into nx2 matrix
         points = vector.reshape(-1, 2)
         
         # Calculate magnitude (Euclidean distance from origin)
@@ -131,7 +141,7 @@ class GenotypeVectorizer:
         )
 
     def vectorize_str(self, data: Dict, sample_id: str) -> VectorizationResult:
-        """Vectorize STR analysis results.
+        """Vectorize STR analysis results using only common markers.
         
         Args:
             data: Dictionary containing STR analysis results
@@ -143,7 +153,13 @@ class GenotypeVectorizer:
         marker_genotypes = []
         vectors = []
         
-        for marker, info in data["LocusResults"].items():
+        # Process only common markers in the specified order
+        for marker in self.vectorize_markers:
+            if marker not in data["LocusResults"]:
+                logger.warning(f"Marker {marker} not found in results for sample {sample_id}")
+                continue
+                
+            info = data["LocusResults"][marker]
             variant = list(info["variants"].values())[0]
             genotype = variant["genotype"]
             result = self._parse_genotype(genotype)
@@ -182,7 +198,7 @@ class GenotypeVectorizer:
         )
 
     def vectorize_eh(self, data: Dict, sample_id: str) -> VectorizationResult:
-        """Vectorize ExpansionHunter results.
+        """Vectorize ExpansionHunter results using only common markers.
         
         Args:
             data: Dictionary containing ExpansionHunter results
@@ -194,7 +210,13 @@ class GenotypeVectorizer:
         marker_genotypes = []
         vectors = []
         
-        for marker, info in data["LocusResults"].items():
+        # Process only common markers in the specified order
+        for marker in self.vectorize_markers:
+            if marker not in data["LocusResults"]:
+                logger.warning(f"Marker {marker} not found in results for sample {sample_id}")
+                continue
+                
+            info = data["LocusResults"][marker]
             if "Variants" not in info:
                 continue
                 

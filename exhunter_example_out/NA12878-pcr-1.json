@@ -2,7 +2,7 @@
   "LocusResults": {
     "CSF1PO": {
       "AlleleCount": 2,
-      "Coverage": 40.66955110870741,
+      "Coverage": 33.56462952947539,
       "FragmentLength": 415,
       "LocusId": "CSF1PO",
       "ReadLength": 151,
@@ -23,7 +23,7 @@
     },
     "D10S1248": {
       "AlleleCount": 2,
-      "Coverage": 29.563007030827475,
+      "Coverage": 23.84640346133045,
       "FragmentLength": 408,
       "LocusId": "D10S1248",
       "ReadLength": 151,
@@ -44,7 +44,7 @@
     },
     "D12S391": {
       "AlleleCount": 2,
-      "Coverage": 39.362898864250944,
+      "Coverage": 33.48296376419687,
       "FragmentLength": 404,
       "LocusId": "D12S391",
       "ReadLength": 151,
@@ -65,7 +65,7 @@
     },
     "D13S317": {
       "AlleleCount": 2,
-      "Coverage": 42.79286100594916,
+      "Coverage": 37.56625202812331,
       "FragmentLength": 411,
       "LocusId": "D13S317",
       "ReadLength": 151,
@@ -86,7 +86,7 @@
     },
     "D16S539": {
       "AlleleCount": 2,
-      "Coverage": 40.914548404543,
+      "Coverage": 36.66792861005949,
       "FragmentLength": 424,
       "LocusId": "D16S539",
       "ReadLength": 151,
@@ -107,7 +107,7 @@
     },
     "D18S51": {
       "AlleleCount": 2,
-      "Coverage": 39.60789616008653,
+      "Coverage": 33.89129259058951,
       "FragmentLength": 419,
       "LocusId": "D18S51",
       "ReadLength": 151,
@@ -128,7 +128,7 @@
     },
     "D19S433": {
       "AlleleCount": 2,
-      "Coverage": 34.38128718226068,
+      "Coverage": 29.563007030827475,
       "FragmentLength": 421,
       "LocusId": "D19S433",
       "ReadLength": 151,
@@ -173,7 +173,7 @@
     },
     "D1S1656": {
       "AlleleCount": 2,
-      "Coverage": 39.76686454398273,
+      "Coverage": 33.00323799244468,
       "FragmentLength": 406,
       "LocusId": "D1S1656",
       "ReadLength": 151,
@@ -194,7 +194,7 @@
     },
     "D21S11": {
       "AlleleCount": 2,
-      "Coverage": 40.26122228231476,
+      "Coverage": 34.46295294753921,
       "FragmentLength": 389,
       "LocusId": "D21S11",
       "ReadLength": 151,
@@ -259,15 +259,15 @@
           "VariantSubtype": "Repeat",
           "VariantType": "Repeat"
         },
-        "chr21_19182055_19182098": {
-          "CountsOfFlankingReads": "(1, 1), (2, 1), (4, 4), (5, 3), (6, 1), (7, 1), (8, 2), (9, 1), (10, 3), (11, 2), (12, 3)",
+        "chr21_19182055_19182099": {
+          "CountsOfFlankingReads": "(1, 3), (2, 1), (3, 3), (4, 3), (5, 1), (6, 1), (7, 1), (8, 3), (10, 3), (11, 2)",
           "CountsOfInrepeatReads": "()",
-          "CountsOfSpanningReads": "(11, 16)",
+          "CountsOfSpanningReads": "(11, 19)",
           "Genotype": "11/11",
           "GenotypeConfidenceInterval": "11-11/11-11",
-          "ReferenceRegion": "chr21:19182055-19182098",
+          "ReferenceRegion": "chr21:19182055-19182099",
           "RepeatUnit": "TCTA",
-          "VariantId": "chr21_19182055_19182098",
+          "VariantId": "chr21_19182055_19182099",
           "VariantSubtype": "Repeat",
           "VariantType": "Repeat"
         }
@@ -275,7 +275,7 @@
     },
     "D22S1045": {
       "AlleleCount": 2,
-      "Coverage": 42.547863710113575,
+      "Coverage": 35.76960519199567,
       "FragmentLength": 410,
       "LocusId": "D22S1045",
       "ReadLength": 151,
@@ -296,7 +296,7 @@
     },
     "D2S1338": {
       "AlleleCount": 2,
-      "Coverage": 43.93618171984857,
+      "Coverage": 37.40292049756625,
       "FragmentLength": 409,
       "LocusId": "D2S1338",
       "ReadLength": 151,
@@ -317,7 +317,7 @@
     },
     "D2S441": {
       "AlleleCount": 2,
-      "Coverage": 39.85289345592212,
+      "Coverage": 34.13628988642509,
       "FragmentLength": 407,
       "LocusId": "D2S441",
       "ReadLength": 151,
@@ -338,7 +338,7 @@
     },
     "D3S1358": {
       "AlleleCount": 2,
-      "Coverage": 43.7728501892915,
+      "Coverage": 36.99459167117361,
       "FragmentLength": 407,
       "LocusId": "D3S1358",
       "ReadLength": 151,
@@ -359,7 +359,7 @@
     },
     "D5S818": {
       "AlleleCount": 2,
-      "Coverage": 38.30124391563007,
+      "Coverage": 31.767982693347754,
       "FragmentLength": 419,
       "LocusId": "D5S818",
       "ReadLength": 151,
@@ -380,7 +380,7 @@
     },
     "D7S820": {
       "AlleleCount": 2,
-      "Coverage": 38.627906976744185,
+      "Coverage": 33.07463493780422,
       "FragmentLength": 415,
       "LocusId": "D7S820",
       "ReadLength": 151,
@@ -401,7 +401,7 @@
     },
     "D8S1179": {
       "AlleleCount": 2,
-      "Coverage": 35.116279069767444,
+      "Coverage": 28.909680908599242,
       "FragmentLength": 416,
       "LocusId": "D8S1179",
       "ReadLength": 151,
@@ -441,7 +441,7 @@
     },
     "FGA": {
       "AlleleCount": 2,
-      "Coverage": 39.52623039480801,
+      "Coverage": 32.66630611141157,
       "FragmentLength": 400,
       "LocusId": "FGA",
       "ReadLength": 151,
@@ -522,7 +522,7 @@
     },
     "SE33": {
       "AlleleCount": 2,
-      "Coverage": 40.01622498647917,
+      "Coverage": 33.80962682531098,
       "FragmentLength": 416,
       "LocusId": "SE33",
       "ReadLength": 151,
@@ -543,7 +543,7 @@
     },
     "TH01": {
       "AlleleCount": 2,
-      "Coverage": 32.1763115197404,
+      "Coverage": 27.929691725256898,
       "FragmentLength": 415,
       "LocusId": "TH01",
       "ReadLength": 151,
@@ -564,7 +564,7 @@
     },
     "TPOX": {
       "AlleleCount": 2,
-      "Coverage": 41.56787452677123,
+      "Coverage": 34.871281773931855,
       "FragmentLength": 388,
       "LocusId": "TPOX",
       "ReadLength": 151,
@@ -585,7 +585,7 @@
     },
     "vWA": {
       "AlleleCount": 2,
-      "Coverage": 37.64791779340184,
+      "Coverage": 32.01297998918334,
       "FragmentLength": 402,
       "LocusId": "vWA",
       "ReadLength": 151,
@@ -606,7 +606,7 @@
     }
   },
   "SampleParameters": {
-    "SampleId": "NA12878-pcr-1",
+    "SampleId": "NA12878-pcr-1_realigned.sorted",
     "Sex": "Female"
   }
 }
