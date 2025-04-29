@@ -97,7 +97,7 @@ Output file: `{sample_name}.STR_analysis.json`
       "allele_count": int,
       "median_height": float,
       "dye": str,
-      "std_height": float,
+      "std_height": float or null,
       "height_limits": {
         "min": int,
         "max": int
@@ -107,22 +107,57 @@ Output file: `{sample_name}.STR_analysis.json`
           "genotype": str,
           "allele_count": int,
           "motif": str,
-          "contamination": {...},
-          "peaks": [...]
+          "peaks": [
+            {
+              "allele": str,
+              "height": float,
+              "size": float
+            },
+            // ...
+          ],
+          "contamination": {
+            "is_contaminated": bool,
+            "main_profile_peaks": [
+              {
+                "allele": str,
+                "height": float,
+                "size": float,
+                "relative_height": float
+              },
+              // ...
+            ],
+            "contamination_peaks": [
+              {
+                "allele": str,
+                "height": float,
+                "size": float,
+                "relative_height": float
+              },
+              // ...
+            ],
+            "relative_distance": float
+          } or null
         }
       }
     }
   },
   "SampleParameters": {
-    "sample_id": str,
-    "analysis_date": str,
-    "sample_name": str,
-    "contamination_summary": {
-      "contaminated_markers": [...],
-      "total_markers": int,
-      "contamination_percentage": float,
-      "mean_contamination_rate": float
-    }
+    "SampleId": str,
+    "analysis_date": str
+  },
+  "SampleContamination": {
+    "contamination_rate": float,
+    "contaminated_markers": [
+      {
+        "marker": str,
+        "main_profile": str,
+        "contamination_peaks": str,
+        "relative_distance": float
+      },
+      // ...
+    ],
+    "total_valid_markers": int,
+    "total_contaminated_markers": int
   }
 }
 ```
