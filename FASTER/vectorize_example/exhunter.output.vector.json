@@ -1,0 +1,97 @@
+{
+  "sample_id": "NA12878-pcr-1_realigned.sorted",
+  "source_type": "eh",
+  "markers": [
+    {
+      "marker": "CSF1PO",
+      "allele1": 10.0,
+      "allele2": 11.0
+    },
+    {
+      "marker": "D10S1248",
+      "allele1": 15.0,
+      "allele2": 16.0
+    },
+    {
+      "marker": "D12S391",
+      "allele1": 16.0,
+      "allele2": 17.0
+    },
+    {
+      "marker": "D13S317",
+      "allele1": 11.0,
+      "allele2": 12.0
+    },
+    {
+      "marker": "D16S539",
+      "allele1": 10.0,
+      "allele2": 11.0
+    },
+    {
+      "marker": "D1S1656",
+      "allele1": 13.0,
+      "allele2": 15.0
+    },
+    {
+      "marker": "D22S1045",
+      "allele1": 13.0,
+      "allele2": 15.0
+    },
+    {
+      "marker": "D2S1338",
+      "allele1": 17.0,
+      "allele2": 20.0
+    },
+    {
+      "marker": "D2S441",
+      "allele1": 11.0,
+      "allele2": 14.0
+    },
+    {
+      "marker": "D3S1358",
+      "allele1": 16.0,
+      "allele2": 17.0
+    },
+    {
+      "marker": "D5S818",
+      "allele1": 12.0,
+      "allele2": 12.0
+    },
+    {
+      "marker": "D7S820",
+      "allele1": 8.0,
+      "allele2": 10.0
+    },
+    {
+      "marker": "D8S1179",
+      "allele1": 12.0,
+      "allele2": 12.0
+    },
+    {
+      "marker": "SE33",
+      "allele1": 17.0,
+      "allele2": 29.0
+    },
+    {
+      "marker": "TPOX",
+      "allele1": 8.0,
+      "allele2": 8.0
+    },
+    {
+      "marker": "vWA",
+      "allele1": 15.0,
+      "allele2": 17.0
+    }
+  ],
+  "vector_properties": {
+    "magnitude": 2.497953,
+    "angle_radians": 0.990642,
+    "angle_degrees": 56.759604
+  },
+  "markers_used": 16,
+  "compact_vector": "2.497953,0.990642",
+  "cartesian_coordinates": {
+    "x": 1.36926,
+    "y": 2.089233
+  }
+}
