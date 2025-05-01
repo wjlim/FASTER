@@ -1,4 +1,5 @@
 import sys
+import os
 import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext
@@ -7,11 +8,11 @@ import pandas as pd
 import logging
 
 # Import FASTER pipeline components
-from .core.peak_caller import PeakCaller
-from .core.contamination import ContaminationDetector
-from .utils.plotting import PeakPlotter
-from .utils.results import ResultGenerator
-from .utils.report_generator import ReportGenerator
+from faster.core.peak_caller import PeakCaller
+from faster.core.contamination import ContaminationDetector
+from faster.utils.plotting import PeakPlotter
+from faster.utils.results import ResultGenerator
+from faster.utils.report_generator import ReportGenerator
 
 # Configure logging to print to GUI
 logger = logging.getLogger("faster_gui")
@@ -26,6 +27,13 @@ class GuiLogHandler(logging.Handler):
         self.text_widget.after(0, self.text_widget.insert, tk.END, msg + '\n')
         self.text_widget.after(0, self.text_widget.see, tk.END)
 
+def get_resource_path(relative_path):
+    # PyInstaller로 패키징된 경우
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    # 개발 환경(소스 실행)일 때
+    return os.path.join(os.path.dirname(__file__), relative_path)
+
 def run_str_analysis(input_path, output_dir, log_widget):
     # Set up logger to GUI
     handler = GuiLogHandler(log_widget)
@@ -38,7 +46,7 @@ def run_str_analysis(input_path, output_dir, log_widget):
         plot_dir = output_dir / 'plots'
         plot_dir.mkdir(exist_ok=True)
         # Use default config
-        config_path = str(Path(__file__).parent / 'config' / 'marker_info.json')
+        config_path = get_resource_path('config/marker_info.json')
         # Initialize components
         peak_caller = PeakCaller(config_path=config_path)
         contamination_detector = ContaminationDetector()
@@ -53,31 +61,28 @@ def run_str_analysis(input_path, output_dir, log_widget):
             sample_data = data[data['Sample File Name'] == sample_name]
             peaks_by_marker = peak_caller.call_peaks(sample_data)
             contamination_by_marker = {}
-            join_points_by_marker = {}
             for marker, peaks in peaks_by_marker.items():
                 contamination_result = contamination_detector.detect_contamination(peaks)
                 if contamination_result:
-                    contamination_info, join_points = contamination_result
+                    contamination_info = contamination_result
                     contamination_by_marker[marker] = contamination_info
-                    if join_points:
-                        join_points_by_marker[marker] = join_points
             results = result_generator.generate_results(
                 peaks_by_marker=peaks_by_marker,
                 contamination_by_marker=contamination_by_marker,
                 sample_name=sample_name
             )
             result_generator.save_results(results, output_dir)
+            # Generate plots
             plotter.plot_sample_summary(
                 peaks_by_marker,
                 contamination_by_marker,
                 sample_name,
-                str(plot_dir),
-                join_points_by_marker
+                str(plot_dir)
             )
+            # Generate plotly plots for HTML report
             plotly_plots = plotter.generate_plotly_plots(
                 peaks_by_marker,
-                contamination_by_marker,
-                join_points_by_marker
+                contamination_by_marker
             )
             all_plotly_plots[results['SampleParameters']['SampleId']] = plotly_plots
             all_results.append(results)
@@ -108,7 +113,7 @@ def main():
     input_entry = tk.Entry(root, textvariable=input_var, width=60)
     input_entry.pack(padx=10, pady=2)
     def browse_input():
-        path = filedialog.askopenfilename(filetypes=[("TSV files", "*.tsv"), ("All files", "*.*")])
+        path = filedialog.askopenfilename(filetypes=[("All files", "*.*")])
         if path:
             input_var.set(path)
     tk.Button(root, text="Browse", command=browse_input).pack(padx=10, pady=2, anchor='w')
