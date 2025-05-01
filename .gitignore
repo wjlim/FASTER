@@ -1,1 +1,5 @@
 .venv 
+dist
+build_gui_exe.bat
+FASTER-GUI.spec
+build
