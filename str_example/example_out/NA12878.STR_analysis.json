@@ -752,7 +752,7 @@
     }
   },
   "SampleParameters": {
-    "SampleId": "NA12878",
+    "sample_id": "NA12878",
     "analysis_date": "2025-05-01 16:38:12"
   },
   "SampleContamination": {
