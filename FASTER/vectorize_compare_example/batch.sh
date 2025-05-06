@@ -1,1 +1,0 @@
-faster compare-vectors -i exhunter.output.json -j str.output.json -o compare.out.json
