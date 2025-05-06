@@ -44,8 +44,7 @@ def main():
                         action='store_true',
                         help='Generate static PNG plots for each marker')
     str_parser.add_argument('--plotly',
-                        action='store_true',
-                        default=True,
+                        default=False,
                         help='Generate interactive Plotly plots in HTML report (default: True)')
 
     # ExpansionHunter analysis subcommand
