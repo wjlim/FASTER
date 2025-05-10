@@ -1,0 +1,1 @@
+faster str -i input.txt -o example_out/

@@ -1,8 +1,8 @@
 # FASTER
 
-## **F**orensic **A**nalysis of **S**hort **T**and**E**m **R**epeats
+**F**orensic **A**nalysis of **ST**Rs with Th**ER**mofisher Electrophoresis Result
 
-A robust tool for analyzing Short Tandem Repeat (STR) data from Thermofisher electrophoresis and Illumina NGS results.
+A robust tool for analyzing Short Tandem Repeat (STR) data from Thermofisher electrophoresis results.
 
 ## Features
 
@@ -40,7 +40,7 @@ A robust tool for analyzing Short Tandem Repeat (STR) data from Thermofisher ele
 
 ### Setup
 ```bash
-git clone https://github.com/wjlim/FASTER.git
+cp -r /mmfs1/lustre2/BI_Analysis/bi2/STR_analysis/FASTER .
 cd FASTER
 pip install .
 ```
@@ -85,6 +85,13 @@ faster compare-vectors -i <vector1.json> -j <vector2.json>
 # Compare and save results to JSON
 faster compare-vectors -i <vector1.json> -j <vector2.json> -o <comparison.json>
 ```
+
+### Vector Analysis Report
+```bash
+# Generate interactive HTML report for vector analysis
+faster report -i <vector_list.txt> -o <output.html>
+```
+Note: The input file should contain paths to vector.json files, one per line.
 
 ## Output Formats by Submodule
 
@@ -272,7 +279,4 @@ Note: All floating-point values in the output are rounded to 6 decimal places fo
 For support and questions, please create an issue in the repository.
 
 ## License
-
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-Note: This project uses ExpansionHunter binary which is licensed under the PolyForm Strict License 1.0.0. For more details about ExpansionHunter's license, please visit [ExpansionHunter's repository](https://github.com/Illumina/ExpansionHunter).

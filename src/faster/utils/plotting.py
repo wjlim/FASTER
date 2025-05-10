@@ -3,8 +3,9 @@ import pandas as pd
 import plotly.graph_objects as go
 import json
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, List, Any
 from ..models.data_models import ContaminationInfo
+from ..core.contamination import JoinPoint
 
 class PeakPlotter:
     """Plots peak data and contamination information."""
@@ -68,149 +69,101 @@ class PeakPlotter:
     def plot_peaks(self,
                   peaks_df: pd.DataFrame,
                   contamination_info: Optional[ContaminationInfo],
-                  output_path: Path) -> Tuple[Path, str]:
+                  output_path: Path,
+                  join_points: Optional[List[JoinPoint]] = None) -> Tuple[Path, str]:
         """
-        Plot peaks and contamination information using both matplotlib and plotly.
+        Plot peaks and contamination information using plotly.
         
         Args:
             peaks_df: DataFrame containing peak information
             contamination_info: Contamination detection results
             output_path: Path to save the plot
+            join_points: Optional list of joining points from neighbor joining
             
         Returns:
-            Tuple of (static plot path, plotly HTML string)
+            Tuple of (plot path, plotly HTML string)
         """
-        # Sort peaks by height in descending order
+        if peaks_df.empty:
+            return output_path, ""
+            
+        # Sort peaks by height
         peaks_df = peaks_df.sort_values('height', ascending=False).reset_index(drop=True)
         
-        # Categorize peaks
-        main_peaks, contamination_peaks, other_peaks = self._get_peak_categories(peaks_df, contamination_info)
-        
-        # Matplotlib static plot
-        plt.figure(figsize=(12, 6))
-        
-        # Plot connecting line for all peaks
-        x = peaks_df['size']
-        y = peaks_df['height']
-        plt.plot(x, y, 'b-', linewidth=1, alpha=0.5)
-        
-        if len(peaks_df) <= 2:
-            # Only main profile
-            plt.scatter(x, y, c='green', alpha=0.7, label='Main Profile')
-            for _, peak in peaks_df.iterrows():
-                plt.annotate(f"{peak['allele']}\n({int(peak['height'])})",
-                           (peak['size'], peak['height']),
-                           xytext=(0, 10), textcoords='offset points',
-                           ha='center', va='bottom')
-        else:
-            # Plot other peaks first (if any)
-            if not other_peaks.empty:
-                plt.scatter(other_peaks['size'], other_peaks['height'],
-                          c='blue', alpha=0.5, label='All Peaks')
-                for _, peak in other_peaks.iterrows():
-                    plt.annotate(f"{peak['allele']}\n({int(peak['height'])})",
-                               (peak['size'], peak['height']),
-                               xytext=(0, -20), textcoords='offset points',
-                               ha='center', va='top')
-            
-            # Plot contamination peaks (if any)
-            if not contamination_peaks.empty:
-                plt.scatter(contamination_peaks['size'], contamination_peaks['height'],
-                          c='red', alpha=0.7, label='Contamination')
-                for _, peak in contamination_peaks.iterrows():
-                    plt.annotate(f"{peak['allele']}\n({int(peak['height'])})",
-                               (peak['size'], peak['height']),
-                               xytext=(0, -20), textcoords='offset points',
-                               ha='center', va='top')
-            
-            # Plot main profile peaks
-            plt.scatter(main_peaks['size'], main_peaks['height'],
-                      c='green', s=100, label='Main Profile')
-            for _, peak in main_peaks.iterrows():
-                plt.annotate(f"{peak['allele']}\n({int(peak['height'])})",
-                           (peak['size'], peak['height']),
-                           xytext=(0, 10), textcoords='offset points',
-                           ha='center', va='bottom')
-        
-        plt.xlabel('Size (bp)')
-        plt.ylabel('Height (RFU)')
-        title = 'Peak Analysis Results'
-        if contamination_info and contamination_info.is_contaminated:
-            title += f'\nCluster Distance: {contamination_info.relative_distance:.2f}'
-        plt.title(title)
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-        
-        plt.savefig(output_path, bbox_inches='tight', dpi=300)
-        plt.close()
-
-        # Plotly interactive plot
+        # Create figure
         fig = go.Figure()
         
-        # Get dye color for hover text
-        dye = peaks_df['dye'].iloc[0] if not peaks_df.empty else 'B'
+        # Get dye color
+        dye = peaks_df['dye'].iloc[0]
         
-        # Add line trace
-        fig.add_trace(go.Scatter(
-            x=x, y=y,
-            mode='lines',
-            line=dict(color='blue', width=1),
-            opacity=0.5,
-            showlegend=False,
-            hoverinfo='skip'
-        ))
-        
-        if len(peaks_df) <= 2:
-            # Only main profile
-            fig.add_trace(go.Scatter(
-                x=x, y=y,
-                mode='markers+text',
-                marker=dict(color='green', size=10),
-                name='Main Profile',
-                text=[peak['allele'] for _, peak in peaks_df.iterrows()],
-                textposition='top center',
-                hovertemplate=[self._create_hover_text(peak, dye) for _, peak in peaks_df.iterrows()]
-            ))
-        else:
-            # Plot other peaks first (if any)
-            if not other_peaks.empty:
-                fig.add_trace(go.Scatter(
-                    x=other_peaks['size'], y=other_peaks['height'],
-                    mode='markers+text',
-                    marker=dict(color='blue', size=8),
-                    name='All Peaks',
-                    text=[peak['allele'] for _, peak in other_peaks.iterrows()],
-                    textposition='bottom center',
-                    hovertemplate=[self._create_hover_text(peak, dye) for _, peak in other_peaks.iterrows()]
-                ))
+        # Plot main profile peaks and connecting lines
+        if contamination_info:
+            main_alleles = [p.allele for p in contamination_info.main_profile_peaks]
+            main_peaks = peaks_df[peaks_df['allele'].isin(main_alleles)]
             
-            # Plot contamination peaks (if any)
-            if not contamination_peaks.empty:
-                fig.add_trace(go.Scatter(
-                    x=contamination_peaks['size'], y=contamination_peaks['height'],
-                    mode='markers+text',
-                    marker=dict(color='red', size=8),
-                    name='Contamination',
-                    text=[peak['allele'] for _, peak in contamination_peaks.iterrows()],
-                    textposition='bottom center',
-                    hovertemplate=[self._create_hover_text(peak, dye) for _, peak in contamination_peaks.iterrows()]
-                ))
-            
-            # Plot main profile peaks
             if not main_peaks.empty:
+                # Add connecting line for main peaks
                 fig.add_trace(go.Scatter(
-                    x=main_peaks['size'], y=main_peaks['height'],
+                    x=main_peaks['size'],
+                    y=main_peaks['height'],
+                    mode='lines',
+                    line=dict(color='blue', width=1),
+                    showlegend=False
+                ))
+                
+                # Add main peak points
+                fig.add_trace(go.Scatter(
+                    x=main_peaks['size'],
+                    y=main_peaks['height'],
                     mode='markers+text',
                     marker=dict(color='green', size=12),
                     name='Main Profile',
-                    text=[peak['allele'] for _, peak in main_peaks.iterrows()],
+                    text=[str(x) for x in main_peaks['allele']],
                     textposition='top center',
                     hovertemplate=[self._create_hover_text(peak, dye) for _, peak in main_peaks.iterrows()]
                 ))
         
-        title = 'Peak Analysis Results (Interactive)'
+        # Add joining points
+        if join_points:
+            fig.add_trace(go.Scatter(
+                x=[jp.size for jp in join_points],
+                y=[jp.height for jp in join_points],
+                mode='markers+text',
+                marker=dict(
+                    symbol='star',
+                    size=15,
+                    color='purple',
+                    line=dict(color='white', width=1)
+                ),
+                name='Joining Points',
+                text=['*' for _ in join_points],
+                textposition='top center',
+                hovertemplate=[
+                    f'Joining Point<br>Size: {jp.size:.2f}<br>Height: {jp.height:.2f}<br>Joined Peaks: {jp.joined_peaks}'
+                    for jp in join_points
+                ]
+            ))
+        
+        # Plot contamination peaks
+        if contamination_info and contamination_info.contamination_peaks:
+            contam_alleles = [p.allele for p in contamination_info.contamination_peaks]
+            contam_peaks = peaks_df[peaks_df['allele'].isin(contam_alleles)]
+            
+            if not contam_peaks.empty:
+                fig.add_trace(go.Scatter(
+                    x=contam_peaks['size'],
+                    y=contam_peaks['height'],
+                    mode='markers+text',
+                    marker=dict(color='red', size=8),
+                    name='Contamination',
+                    text=[str(x) for x in contam_peaks['allele']],
+                    textposition='bottom center',
+                    hovertemplate=[self._create_hover_text(peak, dye) for _, peak in contam_peaks.iterrows()]
+                ))
+        
+        # Update layout
+        title = f'Peak Analysis Results'
         if contamination_info and contamination_info.is_contaminated:
-            title += f'<br>Cluster Distance: {contamination_info.relative_distance:.2f}'
+            title += f'<br>Relative Distance: {contamination_info.relative_distance:.2f}'
         
         fig.update_layout(
             title=title,
@@ -223,11 +176,14 @@ class PeakPlotter:
             margin=dict(t=50, b=50, l=50, r=50)
         )
         
+        # Save plot
+        fig.write_html(str(output_path))
         plotly_html = fig.to_html(full_html=False, include_plotlyjs='cdn')
+        
         return output_path, plotly_html
     
     def plot_sample_summary(self, peaks_by_marker: Dict[str, pd.DataFrame],
-                          contamination_by_marker: Dict[str, ContaminationInfo],
+                          contamination_by_marker: Dict[str, Any],
                           sample_name: str, output_dir: str) -> Dict[str, str]:
         """
         Create summary plots for all markers in a sample.
@@ -243,15 +199,21 @@ class PeakPlotter:
         """
         plotly_plots = {}
         for marker, peaks in peaks_by_marker.items():
-            contamination_info = contamination_by_marker.get(marker)
-            save_path = f"{output_dir}/{sample_name}_{marker}_peaks.png"
-            _, plotly_html = self.plot_peaks(peaks, contamination_info, save_path)
+            contamination_result = contamination_by_marker.get(marker)
+            if isinstance(contamination_result, tuple):
+                contamination_info, join_points = contamination_result
+            else:
+                contamination_info = contamination_result
+                join_points = None
+                
+            save_path = Path(f"{output_dir}/{sample_name}_{marker}_peaks.html")
+            _, plotly_html = self.plot_peaks(peaks, contamination_info, save_path, join_points)
             plotly_plots[marker] = plotly_html
         return plotly_plots
 
     def generate_plotly_plots(self,
                           peaks_by_marker: Dict[str, pd.DataFrame],
-                          contamination_by_marker: Dict[str, ContaminationInfo]) -> Dict[str, str]:
+                          contamination_by_marker: Dict[str, Any]) -> Dict[str, str]:
         """
         Generate plotly plots for each marker without saving static images.
         
@@ -271,9 +233,13 @@ class PeakPlotter:
             # Sort peaks by height in descending order
             peaks_df = peaks_df.sort_values('height', ascending=False).reset_index(drop=True)
             
-            # Categorize peaks
-            contamination_info = contamination_by_marker.get(marker)
-            main_peaks, contamination_peaks, other_peaks = self._get_peak_categories(peaks_df, contamination_info)
+            # Get contamination info and join points
+            contamination_result = contamination_by_marker.get(marker)
+            if isinstance(contamination_result, tuple):
+                contamination_info, join_points = contamination_result
+            else:
+                contamination_info = contamination_result
+                join_points = None
             
             # Create plotly figure
             fig = go.Figure()
@@ -281,69 +247,74 @@ class PeakPlotter:
             # Get dye color for hover text
             dye = peaks_df['dye'].iloc[0] if not peaks_df.empty else 'B'
             
-            # Add line trace
-            x = peaks_df['size']
-            y = peaks_df['height']
-            fig.add_trace(go.Scatter(
-                x=x, y=y,
-                mode='lines',
-                line=dict(color='blue', width=1),
-                opacity=0.5,
-                showlegend=False,
-                hoverinfo='skip'
-            ))
-            
-            if len(peaks_df) <= 2:
-                # Main profile only
-                fig.add_trace(go.Scatter(
-                    x=x, y=y,
-                    mode='markers+text',
-                    marker=dict(color='green', size=10),
-                    name='Main Profile',
-                    text=[peak['allele'] for _, peak in peaks_df.iterrows()],
-                    textposition='top center',
-                    hovertemplate=[self._create_hover_text(peak, dye) for _, peak in peaks_df.iterrows()]
-                ))
-            else:
-                # Plot other peaks first (if any)
-                if not other_peaks.empty:
-                    fig.add_trace(go.Scatter(
-                        x=other_peaks['size'], y=other_peaks['height'],
-                        mode='markers+text',
-                        marker=dict(color='blue', size=8),
-                        name='All Peaks',
-                        text=[peak['allele'] for _, peak in other_peaks.iterrows()],
-                        textposition='bottom center',
-                        hovertemplate=[self._create_hover_text(peak, dye) for _, peak in other_peaks.iterrows()]
-                    ))
+            # Add line trace for main peaks
+            if contamination_info and contamination_info.main_profile_peaks:
+                main_alleles = [p.allele for p in contamination_info.main_profile_peaks]
+                main_peaks = peaks_df[peaks_df['allele'].isin(main_alleles)]
                 
-                # Plot contamination peaks (if any)
-                if not contamination_peaks.empty:
-                    fig.add_trace(go.Scatter(
-                        x=contamination_peaks['size'], y=contamination_peaks['height'],
-                        mode='markers+text',
-                        marker=dict(color='red', size=8),
-                        name='Contamination',
-                        text=[peak['allele'] for _, peak in contamination_peaks.iterrows()],
-                        textposition='bottom center',
-                        hovertemplate=[self._create_hover_text(peak, dye) for _, peak in contamination_peaks.iterrows()]
-                    ))
-                
-                # Plot main profile peaks
                 if not main_peaks.empty:
+                    # Add connecting line
                     fig.add_trace(go.Scatter(
-                        x=main_peaks['size'], y=main_peaks['height'],
+                        x=main_peaks['size'],
+                        y=main_peaks['height'],
+                        mode='lines',
+                        line=dict(color='blue', width=1),
+                        showlegend=False
+                    ))
+                    
+                    # Add main peak points
+                    fig.add_trace(go.Scatter(
+                        x=main_peaks['size'],
+                        y=main_peaks['height'],
                         mode='markers+text',
                         marker=dict(color='green', size=12),
                         name='Main Profile',
-                        text=[peak['allele'] for _, peak in main_peaks.iterrows()],
+                        text=[str(x) for x in main_peaks['allele']],
                         textposition='top center',
                         hovertemplate=[self._create_hover_text(peak, dye) for _, peak in main_peaks.iterrows()]
                     ))
             
+            # Add joining points if available
+            if join_points:
+                fig.add_trace(go.Scatter(
+                    x=[jp.size for jp in join_points],
+                    y=[jp.height for jp in join_points],
+                    mode='markers+text',
+                    marker=dict(
+                        symbol='star',
+                        size=15,
+                        color='purple',
+                        line=dict(color='white', width=1)
+                    ),
+                    name='Joining Points',
+                    text=['*' for _ in join_points],
+                    textposition='top center',
+                    hovertemplate=[
+                        f'Joining Point<br>Size: {jp.size:.2f}<br>Height: {jp.height:.2f}<br>Joined Peaks: {jp.joined_peaks}'
+                        for jp in join_points
+                    ]
+                ))
+            
+            # Add contamination peaks
+            if contamination_info and contamination_info.contamination_peaks:
+                contam_alleles = [p.allele for p in contamination_info.contamination_peaks]
+                contam_peaks = peaks_df[peaks_df['allele'].isin(contam_alleles)]
+                
+                if not contam_peaks.empty:
+                    fig.add_trace(go.Scatter(
+                        x=contam_peaks['size'],
+                        y=contam_peaks['height'],
+                        mode='markers+text',
+                        marker=dict(color='red', size=8),
+                        name='Contamination',
+                        text=[str(x) for x in contam_peaks['allele']],
+                        textposition='bottom center',
+                        hovertemplate=[self._create_hover_text(peak, dye) for _, peak in contam_peaks.iterrows()]
+                    ))
+            
             title = f'{marker} Peak Analysis'
             if contamination_info and contamination_info.is_contaminated:
-                title += f'<br>Cluster Distance: {contamination_info.relative_distance:.2f}'
+                title += f'<br>Relative Distance: {contamination_info.relative_distance:.2f}'
             
             fig.update_layout(
                 title=title,
@@ -358,4 +329,187 @@ class PeakPlotter:
             
             plotly_plots[marker] = fig.to_html(full_html=False, include_plotlyjs='cdn')
         
-        return plotly_plots 
+        return plotly_plots
+
+class VectorPlotter:
+    """Plots STR vector data from vector.json files."""
+    
+    def __init__(self):
+        """Initialize the vector plotter."""
+        pass
+        
+    def _load_vector_data(self, vector_files: List[str]) -> List[Dict]:
+        """Load vector data from JSON files.
+        
+        Args:
+            vector_files: List of paths to vector.json files
+            
+        Returns:
+            List of dictionaries containing vector data
+        """
+        vector_data = []
+        for file_path in vector_files:
+            with open(file_path) as f:
+                data = json.load(f)
+                # Add filename to data for hover info
+                data['filename'] = Path(file_path).stem
+                vector_data.append(data)
+        return vector_data
+    
+    def _create_hover_text(self, data: Dict) -> str:
+        """Create hover text for vector plot.
+        
+        Args:
+            data: Vector data dictionary
+            
+        Returns:
+            Formatted hover text
+        """
+        hover_text = [
+            f"Sample: {data['sample_id']}",
+            f"Magnitude: {data['vector_properties']['magnitude']:.3f}",
+            f"Angle: {data['vector_properties']['angle_degrees']:.2f}°",
+            f"X: {data['cartesian_coordinates']['x']:.3f}",
+            f"Y: {data['cartesian_coordinates']['y']:.3f}",
+            "\nMarkers:"
+        ]
+        
+        # Add marker information
+        for marker in data['markers']:
+            hover_text.append(
+                f"{marker['marker']}: {marker['allele1']}/{marker['allele2']}"
+            )
+            
+        return "<br>".join(hover_text)
+    
+    def plot_vectors(self, vector_files: List[str], output_dir: str) -> str:
+        """Create interactive vector plot using plotly.
+        
+        Args:
+            vector_files: List of paths to vector.json files
+            output_dir: Output directory for the plot
+            
+        Returns:
+            Path to the generated HTML file
+        """
+        # Load vector data
+        vector_data = self._load_vector_data(vector_files)
+        
+        # Create figure
+        fig = go.Figure()
+        
+        # Separate data by source type
+        str_data = [d for d in vector_data if d.get('source_type') == 'str']
+        eh_data = [d for d in vector_data if d.get('source_type') == 'eh']
+        
+        # Plot STR data
+        if str_data:
+            x_coords = [d['cartesian_coordinates']['x'] for d in str_data]
+            y_coords = [d['cartesian_coordinates']['y'] for d in str_data]
+            hover_texts = [self._create_hover_text(d) for d in str_data]
+            sample_ids = [d['sample_id'] for d in str_data]
+            
+            fig.add_trace(go.Scatter(
+                x=x_coords,
+                y=y_coords,
+                mode='markers+text',
+                marker=dict(
+                    size=12,
+                    color='blue',
+                    symbol='circle',
+                    line=dict(color='black', width=1)
+                ),
+                text=sample_ids,
+                textposition="top center",
+                hovertext=hover_texts,
+                hoverinfo='text',
+                name='STR Analysis'
+            ))
+        
+        # Plot EH data
+        if eh_data:
+            x_coords = [d['cartesian_coordinates']['x'] for d in eh_data]
+            y_coords = [d['cartesian_coordinates']['y'] for d in eh_data]
+            hover_texts = [self._create_hover_text(d) for d in eh_data]
+            sample_ids = [d['sample_id'] for d in eh_data]
+            
+            fig.add_trace(go.Scatter(
+                x=x_coords,
+                y=y_coords,
+                mode='markers+text',
+                marker=dict(
+                    size=12,
+                    color='red',
+                    symbol='diamond',
+                    line=dict(color='black', width=1)
+                ),
+                text=sample_ids,
+                textposition="top center",
+                hovertext=hover_texts,
+                hoverinfo='text',
+                name='ExpansionHunter'
+            ))
+        
+        # Calculate axis ranges with padding
+        all_x = [d['cartesian_coordinates']['x'] for d in vector_data]
+        all_y = [d['cartesian_coordinates']['y'] for d in vector_data]
+        x_range = [min(all_x), max(all_x)]
+        y_range = [min(all_y), max(all_y)]
+        
+        # Add 10% padding to ranges
+        x_padding = (x_range[1] - x_range[0]) * 0.1
+        y_padding = (y_range[1] - y_range[0]) * 0.1
+        x_range = [x_range[0] - x_padding, x_range[1] + x_padding]
+        y_range = [y_range[0] - y_padding, y_range[1] + y_padding]
+        
+        # Update layout with improved styling
+        fig.update_layout(
+            title='STR Vector Analysis',
+            xaxis=dict(
+                title='X Coordinate',
+                range=x_range,
+                showgrid=True,
+                gridcolor='lightgray',
+                zeroline=True,
+                zerolinecolor='black',
+                zerolinewidth=2,
+                showline=True,
+                linewidth=2,
+                linecolor='black',
+                mirror=True
+            ),
+            yaxis=dict(
+                title='Y Coordinate',
+                range=y_range,
+                showgrid=True,
+                gridcolor='lightgray',
+                zeroline=True,
+                zerolinecolor='black',
+                zerolinewidth=2,
+                showline=True,
+                linewidth=2,
+                linecolor='black',
+                mirror=True
+            ),
+            plot_bgcolor='white',
+            hovermode='closest',
+            width=1000,
+            height=800,
+            showlegend=True,
+            legend=dict(
+                yanchor="top",
+                y=0.99,
+                xanchor="right",
+                x=0.99,
+                bgcolor='rgba(255, 255, 255, 0.8)',
+                bordercolor='black',
+                borderwidth=1
+            ),
+            margin=dict(t=50, b=50, l=50, r=50)
+        )
+        
+        # Save plot
+        output_path = Path(output_dir) / 'str_vectors.html'
+        fig.write_html(str(output_path))
+        
+        return str(output_path) 

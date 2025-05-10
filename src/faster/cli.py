@@ -12,6 +12,7 @@ from .utils.results import ResultGenerator
 from .utils.report_generator import ReportGenerator
 from .core.compare import ResultComparator
 from .core.vectorizer import GenotypeVectorizer
+from .reports.vector_report import VectorPlotter
 
 # Configure logging
 logging.basicConfig(
@@ -113,6 +114,22 @@ def main():
         help='Output JSON file for comparison results'
     )
     
+    # Add report subcommand
+    report_parser = subparsers.add_parser(
+        'report',
+        help='Generate interactive HTML report for vector analysis'
+    )
+    report_parser.add_argument(
+        '-i', '--input',
+        required=True,
+        help='Text file containing list of vector.json files (one per line)'
+    )
+    report_parser.add_argument(
+        '-o', '--output',
+        required=True,
+        help='Output HTML file path'
+    )
+
     args = parser.parse_args()
     
     if args.command == 'str':
@@ -135,6 +152,8 @@ def main():
             with open(args.output, 'w') as f:
                 json.dump(result.dict(), f, indent=2)
             logger.info(f"Comparison results saved to {args.output}")
+    elif args.command == 'report':
+        process_report(args)
 
 def process_str_analysis(args):
     """Process STR analysis command."""
@@ -317,6 +336,37 @@ def run_vectorize(args):
     except Exception as e:
         logging.error(f"Error during vectorization: {str(e)}")
         sys.exit(1)
+
+def process_report(args):
+    """Process report generation command."""
+    try:
+        # Read vector file list
+        with open(args.input) as f:
+            vector_files = [line.strip() for line in f if line.strip()]
+        
+        if not vector_files:
+            raise ValueError(f"No vector files found in {args.input}")
+            
+        # Create output directory if needed
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Initialize plotter
+        plotter = VectorPlotter()
+        
+        # Generate plot
+        plot_path = plotter.plot_vectors(vector_files, str(output_path.parent))
+        
+        # If output path is different from plot path, rename the file
+        if str(output_path) != plot_path:
+            Path(plot_path).rename(output_path)
+            plot_path = str(output_path)
+            
+        logger.info(f"Generated vector analysis report at: {plot_path}")
+        
+    except Exception as e:
+        logger.error(f"Error generating report: {str(e)}")
+        raise
 
 if __name__ == '__main__':
     main() 

@@ -28,24 +28,9 @@
       "allele2": 11.0
     },
     {
-      "marker": "D18S51",
-      "allele1": 16.0,
-      "allele2": 17.0
-    },
-    {
-      "marker": "D19S433",
-      "allele1": 12.0,
-      "allele2": 14.0
-    },
-    {
       "marker": "D1S1656",
       "allele1": 13.0,
       "allele2": 15.0
-    },
-    {
-      "marker": "D21S11",
-      "allele1": 29.0,
-      "allele2": 31.0
     },
     {
       "marker": "D22S1045",
@@ -83,24 +68,9 @@
       "allele2": 12.0
     },
     {
-      "marker": "DYS391",
-      "allele1": 0.0,
-      "allele2": 0.0
-    },
-    {
-      "marker": "FGA",
-      "allele1": 22.0,
-      "allele2": 24.0
-    },
-    {
       "marker": "SE33",
       "allele1": 17.0,
       "allele2": 29.0
-    },
-    {
-      "marker": "TH01",
-      "allele1": 7.0,
-      "allele2": 10.0
     },
     {
       "marker": "TPOX",
@@ -114,14 +84,14 @@
     }
   ],
   "vector_properties": {
-    "magnitude": 102.37187113655781,
-    "angle_radians": 0.8115695024348231,
-    "angle_degrees": 46.49950727104755
+    "magnitude": 81.141851,
+    "angle_radians": 0.848064,
+    "angle_degrees": 48.590504
   },
-  "markers_used": 22,
-  "compact_vector": "102.371871,0.811570",
+  "markers_used": 16,
+  "compact_vector": "81.141851,0.848064",
   "cartesian_coordinates": {
-    "x": 70.46878451566877,
-    "y": 74.25732562437351
+    "x": 53.670173,
+    "y": 60.856491
   }
 }
