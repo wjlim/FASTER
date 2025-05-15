@@ -41,7 +41,8 @@ packages = ["src/faster"]
 [tool.hatch.build]
 include = [
     "src/faster/**/*.py",
-    "src/faster/**/*.json"
+    "src/faster/**/*.json",
+    "bin/ExpansionHunter"
 ]
 
 [tool.ruff]
