@@ -42,7 +42,8 @@ packages = ["src/faster"]
 include = [
     "src/faster/**/*.py",
     "src/faster/**/*.json",
-    "bin/*"
+    "src/faster/bin/*",
+    "src/faster/variant_catalog.thermofisher_24markers.json"
 ]
 
 [tool.ruff]
