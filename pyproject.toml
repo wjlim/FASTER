@@ -43,7 +43,6 @@ include = [
     "src/faster/**/*.py",
     "src/faster/**/*.json",
     "src/faster/bin/*",
-    "src/faster/variant_catalog.thermofisher_24markers.json"
 ]
 
 [tool.ruff]
