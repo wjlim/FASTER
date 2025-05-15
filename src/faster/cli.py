@@ -60,7 +60,9 @@ def main():
     exhunter_parser.add_argument('-o', '--output_prefix',
                         required=True,
                         help='Output prefix for ExpansionHunter results')
-
+    exhunter_parser.add_argument('-c', '--config',
+                        help='Path to marker configuration file (JSON)',
+                        default=f"{Path(__file__).parent}/config/variant_catalog.thermofisher_24markers.json")
     # Compare results subcommand
     compare_parser = subparsers.add_parser('compare', help='Compare STR analysis and ExpansionHunter results')
     compare_parser.add_argument('-i', '--str_json',
@@ -231,7 +233,7 @@ def process_exhunter_analysis(args):
         # Set paths for ExpansionHunter binary and variant catalog
         package_dir = Path(__file__).parent  # src/faster/
         exhunter_binary = package_dir / 'bin' / 'ExpansionHunter'
-        variant_catalog = package_dir / 'config' / 'variant_catalog.thermofisher_24markers.json'
+        variant_catalog = args.config
 
         # Ensure ExpansionHunter binary is executable
         if exhunter_binary.exists():
