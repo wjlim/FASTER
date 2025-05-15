@@ -42,7 +42,7 @@ packages = ["src/faster"]
 include = [
     "src/faster/**/*.py",
     "src/faster/**/*.json",
-    "bin/ExpansionHunter"
+    "bin/*"
 ]
 
 [tool.ruff]
