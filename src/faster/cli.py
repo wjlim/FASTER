@@ -12,6 +12,8 @@ from .utils.results import ResultGenerator
 from .utils.report_generator import ReportGenerator
 from .core.compare import ResultComparator
 from .core.vectorizer import GenotypeVectorizer
+import os
+import stat
 
 # Configure logging
 logging.basicConfig(
@@ -230,6 +232,10 @@ def process_exhunter_analysis(args):
         package_dir = Path(__file__).parent  # src/faster/
         exhunter_binary = package_dir / 'bin' / 'ExpansionHunter'
         variant_catalog = package_dir / 'config' / 'variant_catalog.thermofisher_24markers.json'
+
+        # Ensure ExpansionHunter binary is executable
+        if exhunter_binary.exists():
+            os.chmod(exhunter_binary, os.stat(exhunter_binary).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
         # Verify binary and variant catalog exist
         if not exhunter_binary.exists():
