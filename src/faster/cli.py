@@ -229,7 +229,7 @@ def process_exhunter_analysis(args):
         # Set paths for ExpansionHunter binary and variant catalog
         package_dir = Path(__file__).parent  # src/faster/
         exhunter_binary = package_dir / 'bin' / 'ExpansionHunter'
-        variant_catalog = package_dir / 'variant_catalog.thermofisher_24markers.json'
+        variant_catalog = package_dir / 'config' / 'variant_catalog.thermofisher_24markers.json'
 
         # Verify binary and variant catalog exist
         if not exhunter_binary.exists():
