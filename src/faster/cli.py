@@ -233,7 +233,7 @@ def process_exhunter_analysis(args):
         # Set paths for ExpansionHunter binary and variant catalog
         package_dir = Path(__file__).parent  # src/faster/
         exhunter_binary = package_dir / 'bin' / 'ExpansionHunter'
-        variant_catalog = args.config
+        variant_catalog = Path(args.config)
 
         # Ensure ExpansionHunter binary is executable
         if exhunter_binary.exists():
