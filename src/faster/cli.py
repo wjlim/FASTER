@@ -262,17 +262,17 @@ def process_exhunter_analysis(args):
         logger.info("Running ExpansionHunter...")
         logger.debug(f"Command: {' '.join(cmd)}")
         
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-        
+        result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+        logger.info(f"ExpansionHunter stdout:\n{result.stdout}")
+        logger.info(f"ExpansionHunter stderr:\n{result.stderr}")
+        if result.returncode != 0:
+            logger.error(f"ExpansionHunter failed with exit code {result.returncode}")
+            raise RuntimeError(f"ExpansionHunter failed. See logs above for details.")
         logger.info("ExpansionHunter analysis completed successfully")
         logger.info(f"Results saved to: {args.output_prefix}.*")
         
     except FileNotFoundError as e:
         logger.error(f"Error: {str(e)}")
-        raise
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error running ExpansionHunter: {str(e)}")
-        logger.error(f"ExpansionHunter stderr output:\n{e.stderr}")
         raise
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
