@@ -226,19 +226,32 @@ class ReportGenerator:
             '<div class="marker-info">',
             f'<p><strong>Genotype:</strong> {variant_info["genotype"]}</p>',
             f'<p><strong>Allele Count:</strong> {marker_data["allele_count"]}</p>',
-            f'<p><strong>Median Height:</strong> {int(marker_data["median_height"])}</p>',
+            f'<p><strong>Median Height:</strong> {int(marker_data["median_height"])} </p>',
             f'<p><strong>Dye:</strong> {marker_data["dye"]} (Limits: {marker_data["height_limits"]["min"]}-{marker_data["height_limits"]["max"]})</p>'
         ]
         
         if marker_data["std_height"] is not None:
             info_html.append(f'<p><strong>Height StdDev:</strong> {round(marker_data["std_height"], 2)}</p>')
         
+        # Always show main profile information (all clustered alleles)
+        main_profile_alleles = None
+        if variant_info.get("contamination") and variant_info["contamination"] and variant_info["contamination"].get("main_profile_peaks"):
+            main_profile_alleles = [p["allele"] for p in variant_info["contamination"]["main_profile_peaks"]]
+        else:
+            # Use all alleles in peaks, sorted by height, up to the allele count
+            peaks = variant_info.get("peaks", [])
+            sorted_peaks = sorted(peaks, key=lambda x: x["height"], reverse=True)
+            main_profile_alleles = [p["allele"] for p in sorted_peaks[:marker_data["allele_count"]]]
+        
+        main_profile = "/".join(main_profile_alleles)
+        info_html.append(f'<p><strong>Main Profile:</strong> {main_profile}</p>')
+        
+        # Show contamination details if present
         if variant_info.get("contamination"):
             contamination = variant_info["contamination"]
             info_html.extend([
                 '<div class="marker-contamination">',
                 '<p><strong>Contamination Details:</strong></p>',
-                f'<p>Main Profile: {"/".join(p["allele"] for p in contamination["main_profile_peaks"])}</p>',
                 '<p>Contamination Peaks:</p>',
                 '<ul>'
             ])
@@ -313,13 +326,21 @@ class ReportGenerator:
                             f'<img src="{relative_path}" alt="{marker} plot" style="max-width:100%;">',
                             '</div>',
                             '<div class="plot-panel interactive-plot">',
-                            plotly_plots.get(sample_id, {}).get(marker, ''),
+                            plotly_plots.get(sample_id, {}).get(marker, '').replace(
+                                f'<title>{marker} Peaks</title>',
+                                f'<title>{sample_id} - {marker} Peaks</title>'
+                            ),
                             '</div>',
                             '</div>'
                         ])
                 else:
                     # Only plotly plot
-                    content_html.append(plotly_plots.get(sample_id, {}).get(marker, ''))
+                    content_html.append(
+                        plotly_plots.get(sample_id, {}).get(marker, '').replace(
+                            f'<title>{marker} Peaks</title>',
+                            f'<title>{sample_id} - {marker} Peaks</title>'
+                        )
+                    )
                 
                 content_html.extend([
                     '</div>',  # Close plot-container

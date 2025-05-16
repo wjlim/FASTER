@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import json
+import os
 from typing import Optional, Dict, List, Tuple, NamedTuple
 from ..models.data_models import ContaminationInfo, PeakInfo
 
@@ -10,11 +12,21 @@ class JoinPoint(NamedTuple):
     joined_peaks: List[int]  # indices of peaks that were joined
 
 class ContaminationDetector:
-    def __init__(self):
-        """Initialize contamination detector with new parameters."""
+    def __init__(self, config_path=None):
+        """Initialize contamination detector with new parameters and dye cutoffs."""
         self.MAX_MAIN_PEAKS = 4  # Maximum number of peaks in main profile
         self.RELATIVE_DISTANCE_THRESHOLD = 0.3  # Maximum relative distance for main profile peaks
-        
+        self.MAX_relative_peak_height = 0.5 # Maximum relative height for peaks in main profile
+        # Load dye cutoffs from marker_info.json
+        if config_path is None:
+            config_path = os.path.join(os.path.dirname(__file__), '../config/marker_info.json')
+        with open(config_path) as f:
+            config = json.load(f)
+            self.dye_cutoffs = config['dye_cutoffs']
+
+    def _get_min_cutoff(self, dye):
+        return self.dye_cutoffs.get(dye, {}).get('min', 0)
+
     def _calculate_distance_matrix(self, peaks: pd.DataFrame) -> np.ndarray:
         """Calculate distance matrix between peaks based on relative height differences."""
         n = len(peaks)
@@ -61,7 +73,8 @@ class ContaminationDetector:
             return peaks, pd.DataFrame(), [], None
         
         join_points = []
-        main_peaks_list = [peaks.iloc[0]]  # Start with highest peak
+        max_peak = peaks.iloc[0]
+        main_peaks_list = [max_peak]  # Start with highest peak
         current_ref_idx = 0
         triggering_distance = None
         
@@ -81,7 +94,9 @@ class ContaminationDetector:
         for i in range(2, len(peaks)):
             current_ref_peak = peaks.iloc[current_ref_idx]
             next_peak = peaks.iloc[i]
-            
+            dye = next_peak['dye'] if 'dye' in next_peak else 'B'
+            min_cutoff = self._get_min_cutoff(dye)
+            relative_height_diff = (next_peak['height'] - min_cutoff) / (max_peak['height'] - min_cutoff)
             # Calculate relative distance to the *current reference* peak
             current_ref_height = current_ref_peak['height']
             if current_ref_height == 0:
@@ -90,7 +105,7 @@ class ContaminationDetector:
                 relative_distance = 1 - (next_peak['height'] / current_ref_height)
             
             # Check if peak should be added to main cluster
-            if relative_distance <= self.RELATIVE_DISTANCE_THRESHOLD and len(main_peaks_list) < self.MAX_MAIN_PEAKS:
+            if relative_distance <= self.RELATIVE_DISTANCE_THRESHOLD and len(main_peaks_list) < self.MAX_MAIN_PEAKS and relative_height_diff >= self.MAX_relative_peak_height:
                 main_peaks_list.append(next_peak)
                 join_x, join_y = self._find_joining_point(current_ref_peak, next_peak)
                 join_points.append(JoinPoint(
@@ -226,14 +241,13 @@ class ContaminationDetector:
         }
 
     def _format_peaks(self, peaks: pd.DataFrame) -> List[Dict]:
-        """Format peaks for output."""
-        max_height = peaks['height'].max()
+        """Format peaks for output, omitting relative_height from JSON serialization."""
         return [
             {
                 'allele': str(row['allele']),
                 'height': float(row['height']),
-                'size': float(row['size']),
-                'relative_height': round(row['height'] / max_height * 100, 2)
+                'size': float(row['size'])
+                # 'relative_height' intentionally omitted for JSON output
             }
             for _, row in peaks.iterrows()
         ] 

@@ -41,6 +41,7 @@ a = Analysis(
         'logging',
         'threading',
         'pathlib',
+        'openpyxl',
     ] + hidden_plotly_graph_objs + hidden_plotly_validators,
     hookspath=['.'],
     hooksconfig={},

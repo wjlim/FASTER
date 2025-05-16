@@ -6,6 +6,7 @@ from tkinter import filedialog, messagebox, scrolledtext
 from pathlib import Path
 import pandas as pd
 import logging
+import json
 
 # Import FASTER pipeline components
 from faster.core.peak_caller import PeakCaller
@@ -28,10 +29,8 @@ class GuiLogHandler(logging.Handler):
         self.text_widget.after(0, self.text_widget.see, tk.END)
 
 def get_resource_path(relative_path):
-    # PyInstaller로 패키징된 경우
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
-    # 개발 환경(소스 실행)일 때
     return os.path.join(os.path.dirname(__file__), relative_path)
 
 def run_str_analysis(input_path, output_dir, log_widget, generate_plots=True, generate_plotly=True):
@@ -123,6 +122,58 @@ def run_str_analysis(input_path, output_dir, log_widget, generate_plots=True, ge
             logger.info(f"Analysis complete. Report: {output_dir / 'STR_analysis_report.html'}")
         else:
             logger.info("Analysis complete.")
+
+        with open(config_path) as f:
+            config = json.load(f)
+            marker_order = config.get('marker_order', list(config['markers'].keys()))
+
+        genotype_rows = []
+        main_profile_rows = []
+        contamination_rows = []
+        sample_names = []
+
+        for results in all_results:
+            sample_id = results['SampleParameters']['SampleId']
+            sample_names.append(sample_id)
+            locus = results['LocusResults']
+            genotype_row = {}
+            main_profile_row = {}
+            contamination_row = {}
+            for marker in marker_order:
+                marker_data = locus.get(marker)
+                if marker_data is None:
+                    genotype_row[marker] = ''
+                    main_profile_row[marker] = ''
+                    contamination_row[marker] = ''
+                    continue
+                variant_info = list(marker_data['variants'].values())[0]
+                # Genotype
+                genotype_row[marker] = variant_info.get('genotype', '')
+                # Main Profile
+                if variant_info.get('contamination') and variant_info['contamination'].get('main_profile_peaks'):
+                    main_profile = '/'.join(p['allele'] for p in variant_info['contamination']['main_profile_peaks'])
+                else:
+                    peaks = variant_info.get('peaks', [])
+                    sorted_peaks = sorted(peaks, key=lambda x: x['height'], reverse=True)
+                    main_profile = '/'.join(p['allele'] for p in sorted_peaks[:marker_data['allele_count']])
+                main_profile_row[marker] = main_profile
+                # Contamination
+                contamination_row[marker] = (
+                    '1' if variant_info.get('contamination') and variant_info['contamination'].get('is_contaminated') else ''
+                )
+            genotype_rows.append(genotype_row)
+            main_profile_rows.append(main_profile_row)
+            contamination_rows.append(contamination_row)
+
+        # Write CSVs
+        genotype_df = pd.DataFrame(genotype_rows, index=sample_names)[marker_order]
+        genotype_df = genotype_df.astype(str)
+        genotype_df.to_csv(output_dir / 'STR_analysis.genotype.csv', index_label='sample_name')
+        genotype_df.to_excel(output_dir / 'STR_analysis.genotype.xlsx', index_label='sample_name')
+        pd.DataFrame(main_profile_rows, index=sample_names)[marker_order].to_csv(output_dir / 'STR_analysis.main_profile.csv', index_label='sample_name')
+        pd.DataFrame(main_profile_rows, index=sample_names)[marker_order].to_excel(output_dir / 'STR_analysis.main_profile.xlsx', index_label='sample_name')
+        pd.DataFrame(contamination_rows, index=sample_names)[marker_order].to_csv(output_dir / 'STR_analysis.contamination.csv', index_label='sample_name')
+        pd.DataFrame(contamination_rows, index=sample_names)[marker_order].to_excel(output_dir / 'STR_analysis.contamination.xlsx', index_label='sample_name')
             
     except Exception as e:
         logger.error(f"Error: {str(e)}")

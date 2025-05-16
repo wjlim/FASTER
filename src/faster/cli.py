@@ -231,6 +231,60 @@ def process_str_analysis(args):
             )
             logger.info(f"Combined HTML report generated: {output_dir / 'STR_analysis_report.html'}")
             
+        # Load marker order from config
+        with open(args.config) as f:
+            config = json.load(f)
+            marker_order = config.get('marker_order', list(config['markers'].keys()))
+
+        # Prepare tables
+        genotype_rows = []
+        main_profile_rows = []
+        contamination_rows = []
+        sample_names = []
+
+        for results in all_results:
+            sample_id = results['SampleParameters']['SampleId']
+            sample_names.append(sample_id)
+            locus = results['LocusResults']
+            genotype_row = {}
+            main_profile_row = {}
+            contamination_row = {}
+            for marker in marker_order:
+                marker_data = locus.get(marker)
+                if marker_data is None:
+                    genotype_row[marker] = ''
+                    main_profile_row[marker] = ''
+                    contamination_row[marker] = ''
+                    continue
+                variant_info = list(marker_data['variants'].values())[0]
+                # Genotype
+                genotype_row[marker] = variant_info.get('genotype', '')
+                # Main Profile
+                if variant_info.get('contamination') and variant_info['contamination'].get('main_profile_peaks'):
+                    main_profile = '/'.join(p['allele'] for p in variant_info['contamination']['main_profile_peaks'])
+                else:
+                    peaks = variant_info.get('peaks', [])
+                    sorted_peaks = sorted(peaks, key=lambda x: x['height'], reverse=True)
+                    main_profile = '/'.join(p['allele'] for p in sorted_peaks[:marker_data['allele_count']])
+                main_profile_row[marker] = main_profile
+                # Contamination
+                contamination_row[marker] = (
+                    '1' if variant_info.get('contamination') and variant_info['contamination'].get('is_contaminated') else ''
+                )
+            genotype_rows.append(genotype_row)
+            main_profile_rows.append(main_profile_row)
+            contamination_rows.append(contamination_row)
+
+        # Write CSVs
+        genotype_df = pd.DataFrame(genotype_rows, index=sample_names)[marker_order]
+        genotype_df = genotype_df.astype(str)
+        genotype_df.to_csv(output_dir / 'STR_analysis.genotype.csv', index_label='sample_name')
+        genotype_df.to_excel(output_dir / 'STR_analysis.genotype.xlsx', index_label='sample_name')
+        pd.DataFrame(main_profile_rows, index=sample_names)[marker_order].to_csv(output_dir / 'STR_analysis.main_profile.csv', index_label='sample_name')
+        pd.DataFrame(main_profile_rows, index=sample_names)[marker_order].to_excel(output_dir / 'STR_analysis.main_profile.xlsx', index_label='sample_name')
+        pd.DataFrame(contamination_rows, index=sample_names)[marker_order].to_csv(output_dir / 'STR_analysis.contamination.csv', index_label='sample_name')
+        pd.DataFrame(contamination_rows, index=sample_names)[marker_order].to_excel(output_dir / 'STR_analysis.contamination.xlsx', index_label='sample_name')
+        
     except Exception as e:
         logger.error(f"Error: {str(e)}")
         raise
