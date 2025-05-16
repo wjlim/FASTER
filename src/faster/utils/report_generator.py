@@ -13,6 +13,7 @@ class ReportGenerator:
         <html>
         <head>
             <title>STR Analysis Report</title>
+            <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
             <style>
                 body {
                     font-family: Arial, sans-serif;
@@ -257,90 +258,103 @@ class ReportGenerator:
         info_html.append('</div>')
         return '\n'.join(info_html)
 
+    def _create_marker_section(self, marker: str, marker_data: Dict[str, Any], sample_id: str, plot_dir: Optional[Path], plotly_plot: Optional[str] = None) -> str:
+        """Create HTML for a marker section."""
+        marker_id = f"{sample_id}_{marker}"
+        section_html = [
+            f'<div id="{marker_id}" class="marker-section">',
+            f'<h3>{marker}</h3>',
+            self._create_marker_info(marker_data)
+        ]
+        
+        # Add plot tabs if we have plots
+        if plot_dir or plotly_plot:
+            section_html.extend([
+                '<div class="plot-tabs">',
+                '<div class="plot-tab static-tab active" onclick="switchPlot(\'' + marker_id + '\', \'static\')">Static Plot</div>'
+            ])
+            
+            if plotly_plot:
+                section_html.append('<div class="plot-tab interactive-tab" onclick="switchPlot(\'' + marker_id + '\', \'interactive\')">Interactive Plot</div>')
+            
+            section_html.append('</div>')
+            
+            # Add plot panels
+            section_html.append('<div class="plot-content">')
+            
+            # Static plot panel
+            if plot_dir:
+                static_plot_path = plot_dir / f"{sample_id}_{marker}.png"
+                if static_plot_path.exists():
+                    section_html.extend([
+                        '<div class="plot-panel static-plot active">',
+                        f'<img src="{static_plot_path}" alt="{marker} plot" style="max-width: 100%;">',
+                        '</div>'
+                    ])
+            
+            # Interactive plot panel
+            if plotly_plot:
+                section_html.extend([
+                    '<div class="plot-panel interactive-plot">',
+                    f'<div id="plotly_{marker_id}"></div>',
+                    '</div>'
+                ])
+            
+            section_html.append('</div>')
+        
+        section_html.append('</div>')
+        
+        # Add plotly plot initialization if available
+        if plotly_plot:
+            section_html.append(f'<script>Plotly.newPlot("plotly_{marker_id}", {plotly_plot});</script>')
+        
+        return '\n'.join(section_html)
+
     def generate_combined_report(self, 
                                all_results: List[Dict[str, Any]],
                                plot_dir: Optional[Path],
                                output_dir: Path,
                                plotly_plots: Dict[str, Dict[str, str]]) -> None:
-        """
-        Generate a single HTML report for all samples.
+        """Generate a combined HTML report for all samples."""
+        # Create navigation
+        nav_html = self._create_navigation(all_results)
         
-        Args:
-            all_results: List of analysis results dictionaries
-            plot_dir: Directory containing plot images (optional)
-            output_dir: Directory to save the report
-            plotly_plots: Dictionary mapping sample IDs to marker plotly HTML strings
-        """
+        # Create content
         content_html = []
-        
-        # Add each sample's content
         for results in all_results:
             sample_id = results['SampleParameters']['SampleId']
-            markers = list(results['LocusResults'].keys())
             
-            # Add sample section with contamination summary at the top
+            # Add sample section
             content_html.extend([
                 f'<div class="sample-section" id="sample_{sample_id}">',
-                f'<h2>{sample_id}</h2>',
-                f'<p>Analysis Date: {results["SampleParameters"]["analysis_date"]}</p>',
-                self._create_contamination_summary(results),
-                '<div class="markers-container">'  # Container for all markers
+                f'<h2>Sample: {sample_id}</h2>',
+                self._create_contamination_summary(results)
             ])
             
             # Add marker sections
-            for marker in markers:
-                marker_data = results['LocusResults'][marker]
-                
-                content_html.extend([
-                    f'<div class="marker-section" id="{sample_id}_{marker}">',
-                    f'<h3>{marker}</h3>',
-                    self._create_marker_info(marker_data),
-                    '<div class="plot-container">'
-                ])
-                
-                # Add plots
-                if plot_dir:
-                    plot_path = plot_dir / f"{sample_id}_{marker}_peaks.png"
-                    if plot_path.exists():
-                        relative_path = os.path.relpath(plot_path, output_dir)
-                        content_html.extend([
-                            '<div class="plot-tabs">',
-                            '<div class="plot-tab static-tab active" onclick="switchPlot(\'' + f"{sample_id}_{marker}" + '\', \'static\')">Static Plot</div>',
-                            '<div class="plot-tab interactive-tab" onclick="switchPlot(\'' + f"{sample_id}_{marker}" + '\', \'interactive\')">Interactive Plot</div>',
-                            '</div>',
-                            '<div class="plot-content">',
-                            '<div class="plot-panel static-plot active">',
-                            f'<img src="{relative_path}" alt="{marker} plot" style="max-width:100%;">',
-                            '</div>',
-                            '<div class="plot-panel interactive-plot">',
-                            plotly_plots.get(sample_id, {}).get(marker, ''),
-                            '</div>',
-                            '</div>'
-                        ])
-                else:
-                    # Only plotly plot
-                    content_html.append(plotly_plots.get(sample_id, {}).get(marker, ''))
-                
-                content_html.extend([
-                    '</div>',  # Close plot-container
-                    '</div>'   # Close marker-section
-                ])
+            for marker, marker_data in results['LocusResults'].items():
+                content_html.append(
+                    self._create_marker_section(
+                        marker=marker,
+                        marker_data=marker_data,
+                        sample_id=sample_id,
+                        plot_dir=plot_dir,
+                        plotly_plot=plotly_plots.get(sample_id, {}).get(marker)
+                    )
+                )
             
-            content_html.extend([
-                '</div>',  # Close markers-container
-                '</div>'   # Close sample-section
-            ])
+            content_html.append('</div>')  # Close sample-section
         
-        # Create final HTML
-        generation_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        html_content = (
-            self.html_template
-            .replace('{generation_time}', generation_time)
-            .replace('<div id="sample-nav"></div>', self._create_navigation(all_results))
-            .replace('<div id="report-content"></div>', '\n'.join(content_html))
+        # Generate final HTML
+        html_content = self.html_template.format(
+            generation_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         )
         
+        # Insert navigation and content
+        html_content = html_content.replace('<div id="sample-nav"></div>', nav_html)
+        html_content = html_content.replace('<div id="report-content"></div>', '\n'.join(content_html))
+        
         # Save report
-        report_path = output_dir / "STR_analysis_report.html"
-        with open(report_path, 'w') as f:
+        output_path = output_dir / 'STR_analysis_report.html'
+        with open(output_path, 'w') as f:
             f.write(html_content) 
