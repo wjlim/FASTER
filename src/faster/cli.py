@@ -45,9 +45,9 @@ def main():
     str_parser.add_argument('--plot',
                         action='store_true',
                         help='Generate static PNG plots for each marker')
-    str_parser.add_argument('--plotly',
-                        default=False,
-                        help='Generate interactive Plotly plots in HTML report (default: False)')
+    str_parser.add_argument('-p', '--plotly',
+                        action='store_true',
+                        help='Generate interactive Plotly plots in HTML report')
 
     # ExpansionHunter analysis subcommand
     exhunter_parser = subparsers.add_parser('exhunter', help='ExpansionHunter analysis help')
@@ -147,6 +147,7 @@ def process_str_analysis(args):
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Create plot directory if needed
+    plot_dir = None
     if args.plot:
         plot_dir = output_dir / 'plots'
         plot_dir.mkdir(exist_ok=True)
@@ -175,10 +176,14 @@ def process_str_analysis(args):
             
             # Detect contamination
             contamination_by_marker = {}
+            join_points_by_marker = {}
             for marker, peaks in peaks_by_marker.items():
-                contamination_info = contamination_detector.detect_contamination(peaks)
-                if contamination_info:
-                    contamination_by_marker[marker] = contamination_info
+                contamination_result = contamination_detector.detect_contamination(peaks)
+                if contamination_result:
+                    contamination_info, join_points = contamination_result
+                    if contamination_info:
+                        contamination_by_marker[marker] = contamination_info
+                        join_points_by_marker[marker] = join_points
             
             # Generate and save results
             results = result_generator.generate_results(
@@ -188,20 +193,22 @@ def process_str_analysis(args):
             )
             result_generator.save_results(results, output_dir)
             
-            # Generate plots
+            # Generate static PNG plots only if --plot is specified
             if args.plot:
                 plotter.plot_sample_summary(
                     peaks_by_marker,
                     contamination_by_marker,
                     sample_name,
-                    str(plot_dir)
+                    str(plot_dir),
+                    join_points_by_marker
                 )
             
-            # Generate plotly plots for HTML report
+            # Generate plotly plots for HTML report if -p is specified
             if args.plotly:
                 plotly_plots = plotter.generate_plotly_plots(
                     peaks_by_marker,
-                    contamination_by_marker
+                    contamination_by_marker,
+                    join_points_by_marker
                 )
                 all_plotly_plots[results['SampleParameters']['SampleId']] = plotly_plots
             
@@ -214,14 +221,15 @@ def process_str_analysis(args):
                 logger.info(f"Static plots saved to: {plot_dir}")
             logger.info("---")
         
-        # Generate combined HTML report with plotly plots
-        report_generator.generate_combined_report(
-            all_results=all_results,
-            plot_dir=plot_dir if args.plot else None,
-            output_dir=output_dir,
-            plotly_plots=all_plotly_plots if args.plotly else {}
-        )
-        logger.info(f"Combined HTML report generated: {output_dir / 'STR_analysis_report.html'}")
+        # Generate HTML report with plotly plots if -p is specified
+        if args.plotly:
+            report_generator.generate_combined_report(
+                all_results=all_results,
+                plot_dir=plot_dir if args.plot else None,
+                output_dir=output_dir,
+                plotly_plots=all_plotly_plots
+            )
+            logger.info(f"Combined HTML report generated: {output_dir / 'STR_analysis_report.html'}")
             
     except Exception as e:
         logger.error(f"Error: {str(e)}")

@@ -15,61 +15,100 @@ from ..models.data_models import (
 logger = logging.getLogger(__name__)
 
 class GenotypeVectorizer:
-    def __init__(self):
-        """Initialize the GenotypeVectorizer class."""
-        self.markers = []
-        self.vector_size = 2  # Each marker has 2 alleles
-
-    def _parse_genotype(self, genotype: str) -> Tuple[float, float]:
-        """Parse genotype string into two allele numbers, always sorted in ascending order.
-        Skip if allele contains non-numeric characters (e.g. 'X').
+    def __init__(self, config_path: Optional[str] = None):
+        """Initialize the GenotypeVectorizer class.
+        Loads the list of markers and normalization/weighting info from config.
         
         Args:
-            genotype: Genotype string in format "allele1/allele2" (e.g. "10/8") or single "allele"
+            config_path: Optional path to marker configuration file
+        """
+        if config_path is None:
+            config_path = str(Path(__file__).parent.parent / 'config' / 'marker_info.json')
+            
+        try:
+            with open(config_path) as f:
+                config = json.load(f)
+        except FileNotFoundError:
+             logger.error(f"Configuration file not found at: {config_path}")
+             raise
+        except json.JSONDecodeError:
+            logger.error(f"Error decoding JSON from configuration file: {config_path}")
+            raise
+            
+        self.vectorize_markers = config.get('vectorize_markers', []) 
+        if not self.vectorize_markers:
+            logger.warning("No markers specified for vectorization ('vectorize_markers') in config file.")
+        
+        # Load normalization ranges from the config file
+        self.marker_ranges = config.get('normalization_ranges', {}) 
+        if not self.marker_ranges:
+             logger.warning("Normalization ranges ('normalization_ranges') not found in config file. Using default range [0, 50] for normalization.")
+
+        # Load marker weights from config file, ensuring all vectorize_markers have a weight
+        default_weight = 1.0
+        loaded_weights = config.get('marker_weights', {}) # Load weights if they exist
+        self.marker_weights = {}
+        for marker in self.vectorize_markers:
+            self.marker_weights[marker] = loaded_weights.get(marker, default_weight)
+            
+        self.vector_size = 2  # Each marker has 2 alleles
+        
+    def _parse_genotype(self, genotype: str) -> Optional[Tuple[float, float]]:
+        """Parse genotype string into two allele numbers, always sorted in ascending order.
+        Handles potential decimal values by taking the integer part.
+        Returns None if parsing fails or alleles are non-numeric.
+        
+        Args:
+            genotype: Genotype string (e.g., "10/8", "15.3", "14/14.1")
             
         Returns:
-            Tuple of (allele1, allele2) as floats, sorted in ascending order.
-            For example, "10/8" will return (8.0, 10.0)
-            Returns None if any allele contains non-numeric characters
+            Tuple of (allele1, allele2) as floats, sorted, or None.
         """
         try:
             if '/' in genotype:
-                alleles = genotype.split('/')
-                allele1 = float(alleles[0].split('.')[0])  # Remove decimal part
-                allele2 = float(alleles[1].split('.')[0])  # Remove decimal part
+                alleles_str = genotype.split('/')
+                # Take integer part before converting to float
+                allele1 = float(int(float(alleles_str[0]))) 
+                allele2 = float(int(float(alleles_str[1])))
             else:
                 # Single allele case - homozygous
-                allele1 = allele2 = float(genotype.split('.')[0])
+                allele1 = allele2 = float(int(float(genotype)))
                 
-            # Always return alleles sorted in ascending order (smaller number first)
             return tuple(sorted([allele1, allele2]))
-        except ValueError:
-            # Return None if conversion to float fails (non-numeric allele)
+        except (ValueError, IndexError):
+            # Handle parsing errors or non-numeric alleles
+            logger.warning(f"Could not parse genotype: {genotype}")
             return None
 
-    def _combine_exhunter_genotypes(self, variants: Dict) -> Tuple[float, float]:
-        """Combine multiple ExpansionHunter variant genotypes into a single genotype.
+    def _combine_exhunter_genotypes(self, variants: Dict) -> Optional[Tuple[float, float]]:
+        """Combine multiple ExpansionHunter variant genotypes into a single average genotype.
         
         Args:
             variants: Dictionary of variants from ExpansionHunter
             
         Returns:
-            Combined genotype as (allele1, allele2), sorted in ascending order
+            Combined genotype as (allele1, allele2), sorted, or None if no valid genotypes found.
         """
-        total_allele1 = 0.0
-        total_allele2 = 0.0
-        
+        valid_alleles = []
         for variant in variants.values():
-            if 'Genotype' not in variant:
-                continue
-                
-            # Get sorted alleles (smaller first)
-            allele1, allele2 = self._parse_genotype(variant['Genotype'])
-            total_allele1 += allele1
-            total_allele2 += allele2
+            genotype_str = variant.get('Genotype')
+            if genotype_str:
+                parsed_alleles = self._parse_genotype(genotype_str)
+                if parsed_alleles:
+                    valid_alleles.extend(parsed_alleles)
+        
+        if not valid_alleles:
+            return None
             
-        # Return sorted alleles
-        return tuple(sorted([total_allele1, total_allele2]))
+        # Simple average for demonstration; could be more sophisticated
+        # This logic might need refinement depending on how EH genotypes should be combined
+        # For now, just take the min and max observed allele values across variants
+        if len(valid_alleles) >= 2:
+             return tuple(sorted([min(valid_alleles), max(valid_alleles)]))
+        elif len(valid_alleles) == 1:
+             return tuple(sorted([valid_alleles[0], valid_alleles[0]])) # Homozygous
+        else: 
+             return None
 
     def _polar_to_cartesian(self, magnitude: float, angle_radians: float) -> CartesianCoordinates:
         """Convert polar coordinates to Cartesian coordinates.
@@ -102,28 +141,84 @@ class GenotypeVectorizer:
             angle += 2 * np.pi
         return round(float(magnitude), 6), round(float(angle), 6)
 
-    def _calculate_vector_properties(self, vector: np.ndarray) -> VectorProperties:
-        """Calculate magnitude and angle of the 44-dimensional vector.
+    def _normalize_allele(self, allele: float, marker: str) -> float:
+        """Normalize allele value to range [0,1] based on marker-specific ranges.
+        Clips values outside the defined range to 0 or 1.
+        Uses default range [0, 50] if marker range is missing or invalid in config.
         
         Args:
-            vector: 44-dimensional numpy array (22 markers x 2 alleles)
+            allele: Raw allele value (integer part)
+            marker: Marker name
             
         Returns:
-            VectorProperties object containing magnitude and angles
+            Normalized allele value between 0 and 1
         """
-        # Reshape into 22x2 matrix
+        marker_range = self.marker_ranges.get(marker)
+        
+        # Validate the loaded range
+        if isinstance(marker_range, (list, tuple)) and len(marker_range) == 2 and all(isinstance(x, (int, float)) for x in marker_range):
+            min_val, max_val = marker_range
+        else:
+            # Use default if marker not found or range is invalid
+            if marker_range is not None: # Log only if invalid format, not just missing
+                 logger.warning(f"Invalid or missing range for marker {marker} in config: {marker_range}. Using default [0, 50].")
+            min_val, max_val = 0, 50
+        
+        if max_val == min_val: # Avoid division by zero
+            return 0.5 # Midpoint if range is zero
+            
+        normalized = (allele - min_val) / (max_val - min_val)
+        
+        # Clip values to be strictly within [0, 1]
+        return max(0.0, min(1.0, normalized))
+
+    def _process_marker_genotype(self, marker: str, allele1: float, allele2: float) -> List[float]:
+        """Process a marker's genotype with normalization and weighting.
+        
+        Args:
+            marker: Marker name
+            allele1: First allele value (integer part)
+            allele2: Second allele value (integer part)
+            
+        Returns:
+            List of processed values [normalized_weighted_allele1, normalized_weighted_allele2]
+        """
+        # Normalize alleles
+        norm_allele1 = self._normalize_allele(allele1, marker)
+        norm_allele2 = self._normalize_allele(allele2, marker)
+        
+        # Apply marker-specific weight
+        weight = self.marker_weights.get(marker, 1.0)
+        
+        # Return weighted and normalized values
+        return [norm_allele1 * weight, norm_allele2 * weight]
+
+    def _calculate_vector_properties(self, vector: np.ndarray) -> VectorProperties:
+        """Calculate magnitude and angle of the processed vector.
+        Magnitude is the L2 norm of the entire flattened vector.
+        Angle is the simple mean angle of allele pairs treated as 2D points (x=processed_allele1, y=processed_allele2).
+        """
+        if vector.size == 0:
+            return VectorProperties(magnitude=0.0, angle_radians=0.0, angle_degrees=0.0)
+            
+        # Calculate L2 norm (magnitude) of the entire flattened vector
+        magnitude = float(np.linalg.norm(vector))
+        
+        # Reshape into nx2 matrix for angle calculation
         points = vector.reshape(-1, 2)
         
-        # Calculate magnitude (Euclidean distance from origin)
-        magnitude = float(np.sqrt(np.sum(points ** 2)))
-        
-        # Calculate angles for each point (in radians)
-        angles = np.arctan2(points[:, 1], points[:, 0])
-        # Ensure angles are positive (0 to 2π)
-        angles = np.where(angles < 0, angles + 2*np.pi, angles)
-        # Take average angle
-        mean_angle = float(np.mean(angles))
-        
+        # Avoid calculating angles if all points are at the origin (e.g., after normalization/weighting)
+        if np.all(points == 0):
+             mean_angle = 0.0
+        else:
+            # Calculate angles for each point (processed allele pair)
+            # arctan2(y, x) where y=processed_allele2, x=processed_allele1
+            angles = np.arctan2(points[:, 1], points[:, 0])
+            # Ensure angles are positive (0 to 2π)
+            angles = np.where(angles < 0, angles + 2*np.pi, angles)
+            # Calculate the simple mean angle
+            mean_angle = float(np.mean(angles))
+            
         return VectorProperties(
             magnitude=round(magnitude, 6),
             angle_radians=round(mean_angle, 6),
@@ -131,7 +226,7 @@ class GenotypeVectorizer:
         )
 
     def vectorize_str(self, data: Dict, sample_id: str) -> VectorizationResult:
-        """Vectorize STR analysis results.
+        """Vectorize STR analysis results using normalized and weighted allele values.
         
         Args:
             data: Dictionary containing STR analysis results
@@ -141,31 +236,47 @@ class GenotypeVectorizer:
             VectorizationResult object
         """
         marker_genotypes = []
-        vectors = []
+        processed_vectors = [] # Store processed (normalized, weighted) values
         
-        for marker, info in data["LocusResults"].items():
-            variant = list(info["variants"].values())[0]
-            genotype = variant["genotype"]
-            result = self._parse_genotype(genotype)
+        for marker in self.vectorize_markers:
+            locus_result = data.get("LocusResults", {}).get(marker)
+            if not locus_result:
+                logger.warning(f"Marker {marker} not found for sample {sample_id}")
+                continue
+                
+            variants = locus_result.get("variants", {})
+            if not variants:
+                logger.warning(f"No variants for marker {marker} in sample {sample_id}")
+                continue
+                
+            variant = list(variants.values())[0]
+            genotype = variant.get("genotype")
+            if not genotype:
+                 logger.warning(f"No genotype for marker {marker} in sample {sample_id}")
+                 continue
             
-            # Skip markers with non-numeric alleles
-            if result is not None:
-                allele1, allele2 = result
+            parsed_alleles = self._parse_genotype(genotype)
+            
+            if parsed_alleles is not None:
+                allele1, allele2 = parsed_alleles
                 marker_genotypes.append(
                     MarkerGenotype(
                         marker=marker,
-                        allele1=allele1,
+                        allele1=allele1, # Store raw parsed alleles
                         allele2=allele2
                     )
                 )
-                vectors.extend([allele1, allele2])
+                # Process alleles (normalize + weight) and add to vector list
+                processed_values = self._process_marker_genotype(marker, allele1, allele2)
+                processed_vectors.extend(processed_values)
             else:
-                logger.info(f"Skipping marker {marker} due to non-numeric allele in genotype: {genotype}")
+                logger.info(f"Skipping marker {marker} due to unparsable genotype: {genotype}")
         
-        vector = np.array(vectors)
-        vector_props = self._calculate_vector_properties(vector)
+        # Calculate properties based on the processed vector
+        vector_array = np.array(processed_vectors, dtype=float)
+        vector_props = self._calculate_vector_properties(vector_array)
         
-        # Calculate Cartesian coordinates
+        # Calculate Cartesian coordinates from the final polar properties
         cartesian = self._polar_to_cartesian(
             vector_props.magnitude,
             vector_props.angle_radians
@@ -174,15 +285,15 @@ class GenotypeVectorizer:
         return VectorizationResult(
             sample_id=sample_id,
             source_type="str",
-            markers=marker_genotypes,
-            vector_properties=vector_props,
+            markers=marker_genotypes, # Stores raw alleles
+            vector_properties=vector_props, # Based on processed vector
             markers_used=len(marker_genotypes),
             compact_vector=f"{vector_props.magnitude:.6f},{vector_props.angle_radians:.6f}",
             cartesian_coordinates=cartesian
         )
 
     def vectorize_eh(self, data: Dict, sample_id: str) -> VectorizationResult:
-        """Vectorize ExpansionHunter results.
+        """Vectorize ExpansionHunter results using normalized and weighted allele values.
         
         Args:
             data: Dictionary containing ExpansionHunter results
@@ -192,30 +303,40 @@ class GenotypeVectorizer:
             VectorizationResult object
         """
         marker_genotypes = []
-        vectors = []
+        processed_vectors = [] # Store processed values
         
-        for marker, info in data["LocusResults"].items():
-            if "Variants" not in info:
+        for marker in self.vectorize_markers:
+            locus_result = data.get("LocusResults", {}).get(marker)
+            if not locus_result:
+                logger.warning(f"Marker {marker} not found in EH results for {sample_id}")
                 continue
                 
-            try:
-                allele1, allele2 = self._combine_exhunter_genotypes(info["Variants"])
+            variants = locus_result.get("Variants")
+            if not variants:
+                logger.warning(f"No variants for marker {marker} in EH results for {sample_id}")
+                continue
+                
+            combined_alleles = self._combine_exhunter_genotypes(variants)
+            
+            if combined_alleles is not None:
+                allele1, allele2 = combined_alleles
                 marker_genotypes.append(
                     MarkerGenotype(
                         marker=marker,
-                        allele1=allele1,
+                        allele1=allele1, # Store raw combined alleles
                         allele2=allele2
                     )
                 )
-                vectors.extend([allele1, allele2])
-            except (ValueError, TypeError):
-                logger.info(f"Skipping marker {marker} due to non-numeric allele")
-                continue
+                # Process alleles (normalize + weight) and add to vector list
+                processed_values = self._process_marker_genotype(marker, allele1, allele2)
+                processed_vectors.extend(processed_values)
+            else:
+                logger.info(f"Skipping marker {marker} due to no valid combined genotype from EH variants")
         
-        vector = np.array(vectors)
-        vector_props = self._calculate_vector_properties(vector)
+        # Calculate properties based on the processed vector
+        vector_array = np.array(processed_vectors, dtype=float)
+        vector_props = self._calculate_vector_properties(vector_array)
         
-        # Calculate Cartesian coordinates
         cartesian = self._polar_to_cartesian(
             vector_props.magnitude,
             vector_props.angle_radians
@@ -224,8 +345,8 @@ class GenotypeVectorizer:
         return VectorizationResult(
             sample_id=sample_id,
             source_type="eh",
-            markers=marker_genotypes,
-            vector_properties=vector_props,
+            markers=marker_genotypes, # Stores raw alleles
+            vector_properties=vector_props, # Based on processed vector
             markers_used=len(marker_genotypes),
             compact_vector=f"{vector_props.magnitude:.6f},{vector_props.angle_radians:.6f}",
             cartesian_coordinates=cartesian
@@ -238,9 +359,11 @@ class GenotypeVectorizer:
             result: VectorizationResult object
             output_path: Path to save the output file
         """
-        # Convert to JSON and save
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, 'w') as f:
-            json.dump(result.dict(), f, indent=2)
+            # Use pydantic's json method for better serialization
+            f.write(result.model_dump_json(indent=2))
 
     def load_vector(self, file_path: str) -> VectorizationResult:
         """Load vectorization results from a JSON file.
@@ -253,10 +376,11 @@ class GenotypeVectorizer:
         """
         with open(file_path) as f:
             data = json.load(f)
-        return VectorizationResult.parse_obj(data)
+        # Use pydantic's parse_obj for robust loading
+        return VectorizationResult.model_validate(data)
 
     def compare_vectors(self, vector1_path: str, vector2_path: str) -> VectorComparisonResult:
-        """Compare two vectors in polar coordinates.
+        """Compare two vectors using loaded vector data.
         
         Args:
             vector1_path: Path to first vector file
@@ -265,40 +389,39 @@ class GenotypeVectorizer:
         Returns:
             VectorComparisonResult object
         """
-        # Load vectors
         vec1 = self.load_vector(vector1_path)
         vec2 = self.load_vector(vector2_path)
         
-        # Get properties
+        # Compare Cartesian coordinates for Euclidean distance
+        x1 = vec1.cartesian_coordinates.x
+        y1 = vec1.cartesian_coordinates.y
+        x2 = vec2.cartesian_coordinates.x
+        y2 = vec2.cartesian_coordinates.y
+        euclidean_dist = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+        
+        # Compare polar coordinates for magnitude and angle differences
         mag1 = vec1.vector_properties.magnitude
         angle1 = vec1.vector_properties.angle_radians
         mag2 = vec2.vector_properties.magnitude
         angle2 = vec2.vector_properties.angle_radians
         
-        # Calculate differences
         mag_diff = abs(mag1 - mag2)
         angle_diff = abs(angle1 - angle2)
-        # Ensure angle difference is the smaller arc
+        # Ensure angle difference is the smaller arc (0 to pi)
         if angle_diff > np.pi:
             angle_diff = 2 * np.pi - angle_diff
-            
-        # Calculate Euclidean distance in polar coordinates
-        x1 = mag1 * np.cos(angle1)
-        y1 = mag1 * np.sin(angle1)
-        x2 = mag2 * np.cos(angle2)
-        y2 = mag2 * np.sin(angle2)
-        euclidean_dist = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
         
         # Calculate normalized similarity score (0-1)
-        max_mag = max(mag1, mag2)
+        # Avoid division by zero if magnitudes are 0
+        max_mag = max(mag1, mag2, 1e-9) # Add small epsilon
         mag_similarity = 1 - (mag_diff / max_mag)
-        angle_similarity = 1 - (angle_diff / np.pi)
+        angle_similarity = 1 - (angle_diff / np.pi) # Normalize angle diff to [0,1]
         similarity_score = (mag_similarity + angle_similarity) / 2
         
         return VectorComparisonResult(
             vector1=vec1,
             vector2=vec2,
-            euclidean_distance=round(euclidean_dist, 6),
+            euclidean_distance=round(float(euclidean_dist), 6),
             magnitude_difference=round(mag_diff, 6),
             angle_difference_radians=round(angle_diff, 6),
             angle_difference_degrees=round(math.degrees(angle_diff), 6),

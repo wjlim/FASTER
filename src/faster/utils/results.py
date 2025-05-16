@@ -1,9 +1,12 @@
 import json
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 import pandas as pd
 import numpy as np
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ResultGenerator:
     """Generates standardized JSON results for STR analysis."""
@@ -125,7 +128,10 @@ class ResultGenerator:
             
             # Add contamination information if present
             if marker in contamination_by_marker:
-                contamination = contamination_by_marker[marker]
+                contamination_result = contamination_by_marker[marker]
+                # Unpack tuple return value (contamination_info, join_points)
+                contamination = contamination_result[0] if isinstance(contamination_result, tuple) else contamination_result
+                
                 if contamination and contamination.is_contaminated:
                     variant_info["contamination"] = {
                         "is_contaminated": True,
@@ -189,18 +195,23 @@ class ResultGenerator:
         
         return results
     
-    def save_results(self,
-                    results: Dict[str, Any],
-                    output_dir: str | Path) -> None:
-        """
-        Save results to a JSON file.
+    def save_results(self, results: Dict, output_dir: str):
+        """Save analysis results to output directory.
         
         Args:
-            results: Results dictionary to save
-            output_dir: Directory to save the results in
+            results: Analysis results dictionary
+            output_dir: Output directory path
         """
+        # Create output directory if it doesn't exist
         output_dir = Path(output_dir)
-        output_path = output_dir / f"{results['SampleParameters']['SampleId']}.STR_analysis.json"
+        output_dir.mkdir(parents=True, exist_ok=True)
         
-        with open(output_path, 'w') as f:
-            json.dump(results, f, indent=2) 
+        # Save JSON results
+        sample_id = results["SampleParameters"]["SampleId"]
+        json_path = output_dir / f"{sample_id}.STR_analysis.json"
+        
+        with open(json_path, 'w') as f:
+            json.dump(results, f, indent=2)
+        
+        logger.info(f"Results saved to: {output_dir}")
+        logger.info("---") 

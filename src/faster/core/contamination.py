@@ -1,155 +1,198 @@
 import pandas as pd
 import numpy as np
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, Tuple, NamedTuple
 from ..models.data_models import ContaminationInfo, PeakInfo
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
+
+class JoinPoint(NamedTuple):
+    """Represents a joining point in neighbor joining."""
+    size: float
+    height: float
+    joined_peaks: List[int]  # indices of peaks that were joined
 
 class ContaminationDetector:
     def __init__(self):
-        """Initialize contamination detector."""
+        """Initialize contamination detector with new parameters."""
         self.MAX_MAIN_PEAKS = 4  # Maximum number of peaks in main profile
-        self.HEIGHT_RATIO_THRESHOLD = 0.2  # Minimum height ratio for significant peaks
-        self.CLUSTER_DISTANCE_THRESHOLD = 0.2  # Threshold for determining separate clusters
-    
-    def detect_contamination(self, peaks: pd.DataFrame) -> Optional[ContaminationInfo]:
+        self.RELATIVE_DISTANCE_THRESHOLD = 0.3  # Maximum relative distance for main profile peaks
+        
+    def _calculate_distance_matrix(self, peaks: pd.DataFrame) -> np.ndarray:
+        """Calculate distance matrix between peaks based on relative height differences."""
+        n = len(peaks)
+        D = np.zeros((n, n))
+        max_height = peaks['height'].iloc[0]
+        
+        for i in range(n):
+            for j in range(i+1, n):
+                # Calculate relative distance based on height differences
+                rel_dist = abs(1 - (peaks['height'].iloc[j] / peaks['height'].iloc[i]))
+                D[i,j] = D[j,i] = rel_dist
+                
+        return D
+        
+    def _find_joining_point(self, peak1: pd.Series, peak2: pd.Series) -> Tuple[float, float]:
+        """Calculate the joining point between two peaks."""
+        # Calculate joining point coordinates
+        x1, y1 = peak1['size'], peak1['height']
+        x2, y2 = peak2['size'], peak2['height']
+        
+        # Join at the weighted average point
+        weight1 = y1 / (y1 + y2)
+        weight2 = y2 / (y1 + y2)
+        
+        join_x = x1 * weight1 + x2 * weight2
+        join_y = y1 * weight1 + y2 * weight2
+        
+        return join_x, join_y
+
+    def _neighbor_joining(self, peaks: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, List[JoinPoint], Optional[float]]:
         """
-        Detect contamination in peaks using enhanced clustering.
+        Implement sequential neighbor joining for peaks.
+        Reference peak updates sequentially.
+        Ensures that the top two peaks are always included in main_peaks_df.
         
         Args:
-            peaks (pd.DataFrame): DataFrame containing peak information
+            peaks: DataFrame of peaks sorted by height
             
         Returns:
-            Optional[ContaminationInfo]: Contamination information if detected
+            Tuple of (main_peaks, contamination_peaks, join_points, triggering_distance)
+            triggering_distance is the relative distance that caused the first contamination, or None.
+        """
+        if len(peaks) <= 1:
+            return peaks, pd.DataFrame(), [], None
+        
+        join_points = []
+        main_peaks_list = [peaks.iloc[0]]  # Start with highest peak
+        current_ref_idx = 0
+        triggering_distance = None
+        
+        # Always include the second peak in main_peaks_list if it exists
+        if len(peaks) > 1:
+            main_peaks_list.append(peaks.iloc[1])
+            # Calculate joining point between first and second peak
+            join_x, join_y = self._find_joining_point(peaks.iloc[0], peaks.iloc[1])
+            join_points.append(JoinPoint(
+                size=join_x,
+                height=join_y,
+                joined_peaks=[0, 1]
+            ))
+            current_ref_idx = 1
+        
+        # Process remaining peaks sequentially, starting from the third
+        for i in range(2, len(peaks)):
+            current_ref_peak = peaks.iloc[current_ref_idx]
+            next_peak = peaks.iloc[i]
+            
+            # Calculate relative distance to the *current reference* peak
+            current_ref_height = current_ref_peak['height']
+            if current_ref_height == 0:
+                relative_distance = float('inf')
+            else:
+                relative_distance = 1 - (next_peak['height'] / current_ref_height)
+            
+            # Check if peak should be added to main cluster
+            if relative_distance <= self.RELATIVE_DISTANCE_THRESHOLD and len(main_peaks_list) < self.MAX_MAIN_PEAKS:
+                main_peaks_list.append(next_peak)
+                join_x, join_y = self._find_joining_point(current_ref_peak, next_peak)
+                join_points.append(JoinPoint(
+                    size=join_x,
+                    height=join_y,
+                    joined_peaks=[current_ref_idx, i]
+                ))
+                current_ref_idx = i
+            else:
+                triggering_distance = relative_distance
+                break
+        
+        main_peaks_df = pd.DataFrame(main_peaks_list)
+        contamination_start_idx = len(main_peaks_list)
+        contamination_peaks_df = peaks.iloc[contamination_start_idx:].copy()
+        
+        return main_peaks_df, contamination_peaks_df, join_points, triggering_distance
+
+    def detect_contamination(self, peaks: pd.DataFrame) -> Tuple[Optional[ContaminationInfo], List[JoinPoint]]:
+        """
+        Detect contamination using sequential neighbor joining approach.
+        
+        Args:
+            peaks: DataFrame containing peak information
+            
+        Returns:
+            Tuple of (ContaminationInfo, join_points)
         """
         if len(peaks) <= 2:
-            return None
-        
-        # Sort peaks by height in descending order and reset index
+             # No contamination if 2 or fewer peaks, pass empty contamination df
+            contamination_info = self._create_contamination_info(peaks, pd.DataFrame(), None)
+            return contamination_info, []
+            
+        # Sort peaks by height in descending order
         peaks = peaks.sort_values('height', ascending=False).reset_index(drop=True)
         
-        # Calculate relative heights
+        # Calculate relative heights (used in _create_contamination_info)
         max_height = peaks['height'].iloc[0]
-        peaks['relative_height'] = round((peaks['height'] / max_height) * 100, 2)
-        
-        # If more than 2 peaks, perform clustering analysis
-        if len(peaks) > 2:
-            return self._analyze_peaks(peaks)
-        
-        return None
-    
-    def _analyze_peaks(self, peaks: pd.DataFrame) -> Optional[ContaminationInfo]:
-        """Analyze peaks to determine contamination."""
-        max_height = peaks['height'].iloc[0]
-        
-        # If we have 3-4 peaks, check if they're close enough to be main profile
-        if len(peaks) <= self.MAX_MAIN_PEAKS:
-            height_ratios = peaks['height'] / max_height
-            
-            # If all peaks are relatively close in height (>20% of max)
-            if all(ratio >= self.HEIGHT_RATIO_THRESHOLD for ratio in height_ratios):
-                # Check if peaks form a tight cluster
-                if self._check_cluster_tightness(peaks):
-                    # All peaks are main profile
-                    return self._create_contamination_info(peaks, pd.DataFrame())
-        
-        # For more peaks or if peaks don't form tight cluster
-        # First identify main profile peaks (up to 4)
-        X = peaks[['height']].values  # Using only height for clustering
-        X_scaled = StandardScaler().fit_transform(X)
-        
-        # Try clustering with 2 clusters
-        kmeans = KMeans(n_clusters=2, random_state=42, n_init=10)
-        labels = kmeans.fit_predict(X_scaled)
-        
-        # Calculate cluster centers and distances
-        cluster_centers = kmeans.cluster_centers_
-        cluster_distance = abs(cluster_centers[0] - cluster_centers[1])[0]
-        
-        # If clusters are well separated
-        if cluster_distance > self.CLUSTER_DISTANCE_THRESHOLD:
-            # Identify main cluster (higher peaks)
-            clusters = pd.DataFrame({'height': peaks['height'], 'cluster': labels})
-            cluster_means = clusters.groupby('cluster')['height'].mean()
-            main_cluster_id = cluster_means.idxmax()
-            
-            main_peaks = peaks[labels == main_cluster_id]
-            contamination_peaks = peaks[labels != main_cluster_id]
-            
-            # Ensure main peaks don't exceed MAX_MAIN_PEAKS
-            if len(main_peaks) > self.MAX_MAIN_PEAKS:
-                # Move excess peaks to contamination
-                contamination_peaks = pd.concat([
-                    contamination_peaks,
-                    main_peaks.iloc[self.MAX_MAIN_PEAKS:]
-                ])
-                main_peaks = main_peaks.iloc[:self.MAX_MAIN_PEAKS]
+        if max_height > 0:
+            peaks['relative_height'] = (peaks['height'] / max_height)
         else:
-            # If clusters aren't well separated, take top 4 as main peaks
-            main_peaks = peaks.iloc[:self.MAX_MAIN_PEAKS]
-            contamination_peaks = peaks.iloc[self.MAX_MAIN_PEAKS:]
-            
-            # Only keep contamination peaks if they're significantly lower
-            contamination_peaks = contamination_peaks[
-                contamination_peaks['height'] < main_peaks['height'].min() * 0.5
-            ]
-            
-            if contamination_peaks.empty:
-                return self._create_contamination_info(main_peaks, pd.DataFrame())
+            peaks['relative_height'] = 0.0
         
-        return self._create_contamination_info(main_peaks, contamination_peaks)
-    
-    def _check_cluster_tightness(self, peaks: pd.DataFrame) -> bool:
-        """Check if peaks form a tight cluster based on heights."""
-        heights = peaks['height'].values
-        height_diffs = np.diff(heights)
-        max_height = heights[0]
+        # Perform neighbor joining
+        main_peaks, contamination_peaks, join_points, triggering_distance = self._neighbor_joining(peaks)
         
-        # Check if consecutive peaks have similar heights
-        return all(abs(diff) < max_height * 0.4 for diff in height_diffs)
+        # Create contamination info, passing the triggering distance
+        contamination_info = self._create_contamination_info(main_peaks, contamination_peaks, triggering_distance)
+        
+        return contamination_info, join_points
     
-    def _create_contamination_info(self, main_cluster: pd.DataFrame, contamination_cluster: pd.DataFrame) -> ContaminationInfo:
-        """Create ContaminationInfo object from cluster data."""
+    def _create_contamination_info(self, main_cluster: pd.DataFrame, 
+                                 contamination_cluster: pd.DataFrame, 
+                                 triggering_distance: Optional[float]) -> ContaminationInfo:
+        """Create ContaminationInfo object from peak data, including triggering distance."""
+        is_contaminated = not contamination_cluster.empty
+        
+        # Handle case where main_cluster might be empty (though unlikely with current logic)
         if main_cluster.empty:
-            return None
+             # If main cluster is somehow empty but contamination exists, treat all as contamination?
+             # Or return None? Returning None for now.
+             if is_contaminated: return None
+             # If both are empty, return non-contaminated info
+             else: return ContaminationInfo(is_contaminated=False, main_profile_peaks=[], contamination_peaks=[], relative_distance=0)
+
             
         max_height = main_cluster['height'].iloc[0]
+        # Avoid division by zero if max_height is 0
+        if max_height == 0: max_height = 1.0
         
-        # Create peak info objects
+        # Create peak info objects for main profile
         main_peaks = [
             PeakInfo(
                 allele=str(row['allele']),
                 height=float(row['height']),
                 size=float(row['size']),
-                relative_height=float(row['relative_height'])
+                # Use pre-calculated relative_height if available, else calculate
+                relative_height=float(row.get('relative_height', row['height'] / max_height)) * 100
             )
             for _, row in main_cluster.iterrows()
         ]
         
+        # Create peak info objects for contamination
         contamination_peaks = [
             PeakInfo(
                 allele=str(row['allele']),
                 height=float(row['height']),
                 size=float(row['size']),
-                relative_height=round(float(row['height']) / max_height * 100, 2)
+                relative_height=float(row.get('relative_height', row['height'] / max_height)) * 100
             )
             for _, row in contamination_cluster.iterrows()
         ]
         
-        # Calculate relative distance only if there are contamination peaks
-        if not contamination_cluster.empty:
-            relative_distance = round(
-                contamination_cluster['height'].mean() / main_cluster['height'].mean(),
-                2
-            )
-        else:
-            relative_distance = 0
+        # Use triggering_distance if contamination occurred, otherwise 0
+        effective_relative_distance = round(triggering_distance, 2) if is_contaminated and triggering_distance is not None else 0
         
         return ContaminationInfo(
-            is_contaminated=len(contamination_peaks) > 0,
+            is_contaminated=is_contaminated,
             main_profile_peaks=main_peaks,
             contamination_peaks=contamination_peaks,
-            relative_distance=relative_distance
+            # Store the distance that *triggered* contamination
+            relative_distance=effective_relative_distance 
         )
 
     def _check_contamination(self, peaks: pd.DataFrame, primary_peaks: pd.DataFrame) -> Dict:

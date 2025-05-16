@@ -42,27 +42,6 @@
         "VariantType": "Repeat"
     },
     {
-        "LocusId": "D21S11",
-        "LocusStructure": "(TCTA)+(TCTG)+(TCTA)+TA(TCTA)+TCA(TCTA)+TCCATA(TCTA)+",
-        "ReferenceRegion": [
-            "chr21:19181972-19181988",
-            "chr21:19181988-19182012",
-            "chr21:19182012-19182024",
-            "chr21:19182026-19182038",
-            "chr21:19182041-19182049",
-            "chr21:19182055-19182098" 
-        ],
-        "VariantType": ["Repeat", "Repeat", "Repeat", "Repeat", "Repeat", "Repeat"],
-        "VariantId": [
-            "chr21_19181972_19181988",
-            "chr21_19181988_19182012",
-            "chr21_19182012_19182024",
-            "chr21_19182026_19182038",
-            "chr21_19182041_19182049",
-            "chr21_19182055_19182098"
-        ]
-    },
-    {
         "LocusId": "D18S51",
         "LocusStructure": "(AGAA)*",
         "ReferenceRegion": "chr18:63281666-63281738",
