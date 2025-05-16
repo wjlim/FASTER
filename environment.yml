@@ -15,4 +15,4 @@ dependencies:
   - pip:
     - hatchling
     - git+https://github.com/wjlim/FASTER.git
-  - openpyxl
+    - openpyxl

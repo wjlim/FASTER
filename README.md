@@ -8,7 +8,7 @@ A robust tool for analyzing Short Tandem Repeat (STR) data from Thermofisher ele
 
 - **Peak Analysis**
   - Height-based peak detection with dye-specific thresholds
-  - Main profile selection (top 2 peaks by height)
+  - Main profile selection (top 2 peaks by height or all clustered alleles)
   - Support for multiple dye channels (B, G, Y, R, P)
 
 - **Contamination Detection**
@@ -25,6 +25,7 @@ A robust tool for analyzing Short Tandem Repeat (STR) data from Thermofisher ele
   - Analysis of BAM files using ExpansionHunter
   - Comparison with STR analysis results
   - Combined result reporting
+  - **Marker filtering:** Only markers listed in `compare_markers` in `marker_info.json` are used for comparison.
 
 - **Genotype Vectorization**
   - Convert genotypes to compact vector representation
@@ -32,11 +33,17 @@ A robust tool for analyzing Short Tandem Repeat (STR) data from Thermofisher ele
   - Polar and Cartesian coordinate systems
   - Vector comparison and similarity scoring
 
+- **Tabular Output (CSV/Excel)**
+  - Automatic export of genotype, main profile, and contamination tables in CSV format after STR analysis
+  - Genotype table also exported as Excel file (`.xlsx`)
+  - Genotype values are quoted to prevent Excel from interpreting them as dates
+
 ## Installation
 
 ### Prerequisites
 - Python 3.10 or higher
 - pip package manager
+- For Excel output: `openpyxl` (automatically installed via requirements)
 
 ### Setup
 ```bash
@@ -89,7 +96,14 @@ faster compare-vectors -i <vector1.json> -j <vector2.json> -o <comparison.json>
 ## Output Formats by Submodule
 
 ### 1. STR Analysis (`faster str`)
-Output file: `{sample_name}.STR_analysis.json`
+Output files:
+- `{sample_name}.STR_analysis.json`: Full analysis results (see below)
+- `STR_analysis.genotype.csv`: Table of genotypes (rows: sample_name, columns: marker name, values: genotype, quoted to prevent Excel date conversion)
+- `STR_analysis.main_profile.csv`: Table of main profiles (rows: sample_name, columns: marker name, values: main profile alleles)
+- `STR_analysis.contamn.csv`: Table of contamination status (rows: sample_name, columns: marker name, values: 1 for contaminated, blank otherwise)
+- `STR_analysis.genotype.xlsx`: Excel version of the genotype table (values quoted for Excel safety)
+
+Example of `{sample_name}.STR_analysis.json`:
 ```json
 {
   "LocusResults": {
@@ -187,26 +201,20 @@ Output files:
 ```
 
 ### 3. Results Comparison (`faster compare`)
+- **Now only compares markers listed in `compare_markers` in `marker_info.json`.**
 Output file: `{output_prefix}.comparison.json`
 ```json
 {
   "sample_id": str,
-  "str_results": {
-    "marker_name": {
-      "genotype": str,
-      "allele_count": int
-    }
-  },
-  "eh_results": {
-    "marker_name": {
-      "genotype": str,
-      "allele_count": int
-    }
-  },
-  "comparison_summary": {
-    "matching_markers": [...],
-    "mismatched_markers": [...],
-    "concordance_rate": float
+  "matching_markers": [...],
+  "mismatching_markers": [...],
+  "missing_markers": [...],
+  "summary": {
+    "total_markers": int,
+    "matching": int,
+    "mismatching": int,
+    "missing": int,
+    "match_ratio": float
   }
 }
 ```
