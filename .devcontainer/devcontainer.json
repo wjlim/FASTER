@@ -1,0 +1,7 @@
+{
+  "name": "fastest-pipeline",
+  "image": "python:3.11-slim",
+  "remoteUser": "root",
+  "runArgs": ["--privileged"],
+  "postCreateCommand": "pip install uv && uv pip install ."
+}
