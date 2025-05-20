@@ -3,3 +3,5 @@ dist
 build
 CL250507-002*
 src/faster/config/marker_info.json.bak
+*.html
+test
