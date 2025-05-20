@@ -27,6 +27,8 @@ class ContaminationDetector:
 
     def _get_min_cutoff(self, dye):
         return self.dye_cutoffs.get(dye, {}).get('min', 0)
+    def _get_max_cutoff(self, dye):
+        return self.dye_cutoffs.get(dye, {}).get('max', 50000)
 
     def _calculate_distance_matrix(self, peaks: pd.DataFrame) -> np.ndarray:
         """Calculate distance matrix between peaks based on relative height differences."""
@@ -71,9 +73,14 @@ class ContaminationDetector:
             triggering_distance is the relative distance that caused the first contamination, or None.
         """
         peaks['min_cutoff'] = peaks['dye'].apply(self._get_min_cutoff)
+        peaks['max_cutoff'] = peaks['dye'].apply(self._get_max_cutoff)
         if self.threshold is not None:
             peaks['min_cutoff'] = peaks['height'].max() * self.threshold
+            peaks['max_cutoff'] = 50000
+
         peaks = peaks[peaks['height'] > peaks['min_cutoff']]
+        peaks = peaks[peaks['height'] <= peaks['max_cutoff']]
+
         if len(peaks) <= 1:
             return peaks, pd.DataFrame(), [], None
         

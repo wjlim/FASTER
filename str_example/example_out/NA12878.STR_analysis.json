@@ -6,7 +6,7 @@
       "dye": "B",
       "std_height": 762.5,
       "height_limits": {
-        "min": 2500,
+        "min": 1500,
         "max": 50000
       },
       "variants": {
@@ -14,19 +14,24 @@
           "genotype": "10/11",
           "allele_count": 2,
           "motif": "[ATCT]*",
-          "peaks": [
-            {
-              "allele": "10",
-              "height": 16330.0,
-              "size": 298.61
-            },
-            {
-              "allele": "11",
-              "height": 14805.0,
-              "size": 302.53
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "10",
+                "height": 16330.0,
+                "size": 298.61,
+                "relative_height": 100.0
+              },
+              {
+                "allele": "11",
+                "height": 14805.0,
+                "size": 302.53,
+                "relative_height": 90.66
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -36,7 +41,7 @@
       "dye": "P",
       "std_height": 316.0,
       "height_limits": {
-        "min": 2000,
+        "min": 500,
         "max": 50000
       },
       "variants": {
@@ -44,19 +49,24 @@
           "genotype": "15/16",
           "allele_count": 2,
           "motif": "[GGAA]*",
-          "peaks": [
-            {
-              "allele": "15",
-              "height": 9424.0,
-              "size": 114.23
-            },
-            {
-              "allele": "16",
-              "height": 8792.0,
-              "size": 118.04
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "15",
+                "height": 9424.0,
+                "size": 114.23,
+                "relative_height": 100.0
+              },
+              {
+                "allele": "16",
+                "height": 8792.0,
+                "size": 118.04,
+                "relative_height": 93.29
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -66,7 +76,7 @@
       "dye": "P",
       "std_height": 333.0,
       "height_limits": {
-        "min": 2000,
+        "min": 500,
         "max": 50000
       },
       "variants": {
@@ -74,19 +84,24 @@
           "genotype": "16/17",
           "allele_count": 2,
           "motif": "[AGAT]+[AGAC]+AGAT",
-          "peaks": [
-            {
-              "allele": "16",
-              "height": 10274.0,
-              "size": 223.57
-            },
-            {
-              "allele": "17",
-              "height": 9608.0,
-              "size": 227.48
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "16",
+                "height": 10274.0,
+                "size": 223.57,
+                "relative_height": 100.0
+              },
+              {
+                "allele": "17",
+                "height": 9608.0,
+                "size": 227.48,
+                "relative_height": 93.52
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -96,7 +111,7 @@
       "dye": "R",
       "std_height": 627.0,
       "height_limits": {
-        "min": 2000,
+        "min": 1000,
         "max": 50000
       },
       "variants": {
@@ -104,19 +119,24 @@
           "genotype": "11/12",
           "allele_count": 2,
           "motif": "[TATC]*",
-          "peaks": [
-            {
-              "allele": "11",
-              "height": 15296.0,
-              "size": 223.85
-            },
-            {
-              "allele": "12",
-              "height": 14042.0,
-              "size": 228.05
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "11",
+                "height": 15296.0,
+                "size": 223.85,
+                "relative_height": 100.0
+              },
+              {
+                "allele": "12",
+                "height": 14042.0,
+                "size": 228.05,
+                "relative_height": 91.8
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -126,7 +146,7 @@
       "dye": "B",
       "std_height": 1809.0,
       "height_limits": {
-        "min": 2500,
+        "min": 1500,
         "max": 50000
       },
       "variants": {
@@ -134,19 +154,24 @@
           "genotype": "10/11",
           "allele_count": 2,
           "motif": "[GATA]*",
-          "peaks": [
-            {
-              "allele": "10",
-              "height": 27607.0,
-              "size": 248.55
-            },
-            {
-              "allele": "11",
-              "height": 23989.0,
-              "size": 252.6
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "10",
+                "height": 27607.0,
+                "size": 248.55,
+                "relative_height": 100.0
+              },
+              {
+                "allele": "11",
+                "height": 23989.0,
+                "size": 252.6,
+                "relative_height": 86.89
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -156,7 +181,7 @@
       "dye": "G",
       "std_height": 142.5,
       "height_limits": {
-        "min": 5000,
+        "min": 500,
         "max": 50000
       },
       "variants": {
@@ -164,19 +189,24 @@
           "genotype": "16/17",
           "allele_count": 2,
           "motif": "[AGAA]*",
-          "peaks": [
-            {
-              "allele": "16",
-              "height": 8659.0,
-              "size": 300.96
-            },
-            {
-              "allele": "17",
-              "height": 8374.0,
-              "size": 305.0
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "16",
+                "height": 8659.0,
+                "size": 300.96,
+                "relative_height": 100.0
+              },
+              {
+                "allele": "17",
+                "height": 8374.0,
+                "size": 305.0,
+                "relative_height": 96.71
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -194,72 +224,62 @@
           "genotype": "12/14",
           "allele_count": 3,
           "motif": "[CCTT]*cctaCCTTctttCCTT",
-          "peaks": [
-            {
-              "allele": "12",
-              "height": 32238.0,
-              "size": 142.44
-            },
-            {
-              "allele": "14",
-              "height": 31805.0,
-              "size": 150.04
-            },
-            {
-              "allele": "12.2",
-              "height": 20012.0,
-              "size": 144.64
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": true,
+            "main_profile_peaks": [
+              {
+                "allele": "12",
+                "height": 32238.0,
+                "size": 142.44,
+                "relative_height": 1.0
+              },
+              {
+                "allele": "14",
+                "height": 31805.0,
+                "size": 150.04,
+                "relative_height": 0.9865686456976239
+              }
+            ],
+            "contamination_peaks": [
+              {
+                "allele": "12.2",
+                "height": 20012.0,
+                "size": 144.64,
+                "relative_height": 0.6207581115453812
+              }
+            ]
+          }
         }
       }
     },
     "D1S1656": {
-      "allele_count": 3,
-      "median_height": 13515.0,
+      "allele_count": 4,
+      "median_height": 9727.0,
       "dye": "P",
-      "std_height": 3774.89110954063,
+      "std_height": 5313.413262677767,
       "height_limits": {
-        "min": 2000,
+        "min": 500,
         "max": 50000
       },
       "variants": {
         "chr1_230769615_230769683": {
           "genotype": "14/15.3",
-          "allele_count": 3,
+          "allele_count": 4,
           "motif": "CCTA[TCTA]*",
-          "peaks": [
-            {
-              "allele": "15.3",
-              "height": 14318.0,
-              "size": 187.55
-            },
-            {
-              "allele": "14",
-              "height": 13515.0,
-              "size": 180.59
-            },
-            {
-              "allele": "13.3",
-              "height": 5939.0,
-              "size": 179.7
-            }
-          ],
-          "contamination": {
+          "peaks": {
             "is_contaminated": true,
             "main_profile_peaks": [
               {
                 "allele": "15.3",
                 "height": 14318.0,
                 "size": 187.55,
-                "relative_height": 100.0
+                "relative_height": 1.0
               },
               {
                 "allele": "14",
                 "height": 13515.0,
                 "size": 180.59,
-                "relative_height": 94.39
+                "relative_height": 0.9439167481491828
               }
             ],
             "contamination_peaks": [
@@ -267,10 +287,15 @@
                 "allele": "13.3",
                 "height": 5939.0,
                 "size": 179.7,
-                "relative_height": 41.48
+                "relative_height": 0.41479256879452436
+              },
+              {
+                "allele": "16.3",
+                "height": 1584.0,
+                "size": 191.98,
+                "relative_height": 0.11062997625366672
               }
-            ],
-            "relative_distance": 0.43
+            ]
           }
         }
       }
@@ -281,7 +306,7 @@
       "dye": "G",
       "std_height": 12779.0,
       "height_limits": {
-        "min": 5000,
+        "min": 500,
         "max": 50000
       },
       "variants": {
@@ -289,19 +314,24 @@
           "genotype": "26/30",
           "allele_count": 2,
           "motif": "[TCTA]+[TCTG]+[TCTA]+ta[TCTA]+tca[TCTA]+tccata[TCTA]+",
-          "peaks": [
-            {
-              "allele": "30",
-              "height": 31151.0,
-              "size": 207.73
-            },
-            {
-              "allele": "26",
-              "height": 5593.0,
-              "size": 191.98
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "30",
+                "height": 31151.0,
+                "size": 207.73,
+                "relative_height": 100.0
+              },
+              {
+                "allele": "26",
+                "height": 5593.0,
+                "size": 191.98,
+                "relative_height": 17.95
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -311,7 +341,7 @@
       "dye": "R",
       "std_height": 413.0,
       "height_limits": {
-        "min": 2000,
+        "min": 1000,
         "max": 50000
       },
       "variants": {
@@ -319,19 +349,24 @@
           "genotype": "13/15",
           "allele_count": 2,
           "motif": "[ATT]+ACT[ATT]+",
-          "peaks": [
-            {
-              "allele": "13",
-              "height": 19215.0,
-              "size": 105.07
-            },
-            {
-              "allele": "15",
-              "height": 18389.0,
-              "size": 111.1
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "13",
+                "height": 19215.0,
+                "size": 105.07,
+                "relative_height": 100.0
+              },
+              {
+                "allele": "15",
+                "height": 18389.0,
+                "size": 111.1,
+                "relative_height": 95.7
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -341,7 +376,7 @@
       "dye": "P",
       "std_height": 7733.631071854641,
       "height_limits": {
-        "min": 2000,
+        "min": 500,
         "max": 50000
       },
       "variants": {
@@ -349,37 +384,20 @@
           "genotype": "17/20",
           "allele_count": 3,
           "motif": "[GGAA]+GGAC[GGAA]+[GGCA]+",
-          "peaks": [
-            {
-              "allele": "17",
-              "height": 20555.0,
-              "size": 305.48
-            },
-            {
-              "allele": "20",
-              "height": 16276.0,
-              "size": 317.64
-            },
-            {
-              "allele": "19.3",
-              "height": 2434.0,
-              "size": 316.64
-            }
-          ],
-          "contamination": {
+          "peaks": {
             "is_contaminated": true,
             "main_profile_peaks": [
               {
                 "allele": "17",
                 "height": 20555.0,
                 "size": 305.48,
-                "relative_height": 100.0
+                "relative_height": 1.0
               },
               {
                 "allele": "20",
                 "height": 16276.0,
                 "size": 317.64,
-                "relative_height": 79.18
+                "relative_height": 0.7918268061298954
               }
             ],
             "contamination_peaks": [
@@ -387,10 +405,9 @@
                 "allele": "19.3",
                 "height": 2434.0,
                 "size": 316.64,
-                "relative_height": 11.84
+                "relative_height": 0.1184140111894916
               }
-            ],
-            "relative_distance": 0.13
+            ]
           }
         }
       }
@@ -409,19 +426,24 @@
           "genotype": "11/14",
           "allele_count": 2,
           "motif": "[TCTA]*",
-          "peaks": [
-            {
-              "allele": "11",
-              "height": 31435.0,
-              "size": 90.7
-            },
-            {
-              "allele": "14",
-              "height": 31183.0,
-              "size": 102.66
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "11",
+                "height": 31435.0,
+                "size": 90.7,
+                "relative_height": 100.0
+              },
+              {
+                "allele": "14",
+                "height": 31183.0,
+                "size": 102.66,
+                "relative_height": 99.2
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -431,7 +453,7 @@
       "dye": "B",
       "std_height": 4821.3849324303765,
       "height_limits": {
-        "min": 2500,
+        "min": 1500,
         "max": 50000
       },
       "variants": {
@@ -439,24 +461,31 @@
           "genotype": "16/17",
           "allele_count": 3,
           "motif": "TCTATCTG[TCTA]*",
-          "peaks": [
-            {
-              "allele": "16",
-              "height": 23893.0,
-              "size": 127.47
-            },
-            {
-              "allele": "17",
-              "height": 22164.0,
-              "size": 131.43
-            },
-            {
-              "allele": "20.1",
-              "height": 12911.0,
-              "size": 144.64
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": true,
+            "main_profile_peaks": [
+              {
+                "allele": "16",
+                "height": 23893.0,
+                "size": 127.47,
+                "relative_height": 1.0
+              },
+              {
+                "allele": "17",
+                "height": 22164.0,
+                "size": 131.43,
+                "relative_height": 0.9276357092035324
+              }
+            ],
+            "contamination_peaks": [
+              {
+                "allele": "20.1",
+                "height": 12911.0,
+                "size": 144.64,
+                "relative_height": 0.5403674716444147
+              }
+            ]
+          }
         }
       }
     },
@@ -466,7 +495,7 @@
       "dye": "R",
       "std_height": null,
       "height_limits": {
-        "min": 2000,
+        "min": 1000,
         "max": 50000
       },
       "variants": {
@@ -474,14 +503,18 @@
           "genotype": "12",
           "allele_count": 1,
           "motif": "[ATCT]*",
-          "peaks": [
-            {
-              "allele": "12",
-              "height": 26397.0,
-              "size": 159.47
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "12",
+                "height": 26397.0,
+                "size": 159.47,
+                "relative_height": 100.0
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -491,7 +524,7 @@
       "dye": "R",
       "std_height": 66.0,
       "height_limits": {
-        "min": 2000,
+        "min": 1000,
         "max": 50000
       },
       "variants": {
@@ -499,19 +532,24 @@
           "genotype": "10/8",
           "allele_count": 2,
           "motif": "[TATC]*",
-          "peaks": [
-            {
-              "allele": "10",
-              "height": 12158.0,
-              "size": 279.15
-            },
-            {
-              "allele": "8",
-              "height": 12026.0,
-              "size": 271.17
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "10",
+                "height": 12158.0,
+                "size": 279.15,
+                "relative_height": 100.0
+              },
+              {
+                "allele": "8",
+                "height": 12026.0,
+                "size": 271.17,
+                "relative_height": 98.91
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -521,7 +559,7 @@
       "dye": "G",
       "std_height": 10696.6760049819,
       "height_limits": {
-        "min": 5000,
+        "min": 500,
         "max": 50000
       },
       "variants": {
@@ -529,37 +567,20 @@
           "genotype": "12/12",
           "allele_count": 3,
           "motif": "TCTATCTG[TCTA]*",
-          "peaks": [
-            {
-              "allele": "12",
-              "height": 29038.0,
-              "size": 144.79
-            },
-            {
-              "allele": "12",
-              "height": 28970.0,
-              "size": 144.41
-            },
-            {
-              "allele": "11",
-              "height": 6313.0,
-              "size": 140.46
-            }
-          ],
-          "contamination": {
+          "peaks": {
             "is_contaminated": true,
             "main_profile_peaks": [
               {
                 "allele": "12",
                 "height": 29038.0,
                 "size": 144.79,
-                "relative_height": 100.0
+                "relative_height": 1.0
               },
               {
                 "allele": "12",
                 "height": 28970.0,
                 "size": 144.41,
-                "relative_height": 99.77
+                "relative_height": 0.9976582409256836
               }
             ],
             "contamination_peaks": [
@@ -567,10 +588,9 @@
                 "allele": "11",
                 "height": 6313.0,
                 "size": 140.46,
-                "relative_height": 21.74
+                "relative_height": 0.21740477994352228
               }
-            ],
-            "relative_distance": 0.22
+            ]
           }
         }
       }
@@ -589,19 +609,24 @@
           "genotype": "22/24",
           "allele_count": 2,
           "motif": "[GGAA]+GGAG[AAAG]+AGAAAAAA[GAAA]+",
-          "peaks": [
-            {
-              "allele": "22",
-              "height": 32149.0,
-              "size": 262.97
-            },
-            {
-              "allele": "24",
-              "height": 31170.0,
-              "size": 271.1
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "22",
+                "height": 32149.0,
+                "size": 262.97,
+                "relative_height": 100.0
+              },
+              {
+                "allele": "24",
+                "height": 31170.0,
+                "size": 271.1,
+                "relative_height": 96.95
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -611,7 +636,7 @@
       "dye": "R",
       "std_height": 2783.0587888548494,
       "height_limits": {
-        "min": 2000,
+        "min": 1000,
         "max": 50000
       },
       "variants": {
@@ -619,24 +644,31 @@
           "genotype": "17/28.2",
           "allele_count": 3,
           "motif": "[CTTT]+TT[CTTT]+",
-          "peaks": [
-            {
-              "allele": "17",
-              "height": 9981.0,
-              "size": 361.79
-            },
-            {
-              "allele": "28.2",
-              "height": 6545.0,
-              "size": 408.94
-            },
-            {
-              "allele": "16.3",
-              "height": 3164.0,
-              "size": 360.82
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": true,
+            "main_profile_peaks": [
+              {
+                "allele": "17",
+                "height": 9981.0,
+                "size": 361.79,
+                "relative_height": 1.0
+              },
+              {
+                "allele": "28.2",
+                "height": 6545.0,
+                "size": 408.94,
+                "relative_height": 0.6557459172427612
+              }
+            ],
+            "contamination_peaks": [
+              {
+                "allele": "16.3",
+                "height": 3164.0,
+                "size": 360.82,
+                "relative_height": 0.31700230437831883
+              }
+            ]
+          }
         }
       }
     },
@@ -654,19 +686,24 @@
           "genotype": "7/9.3",
           "allele_count": 2,
           "motif": "[AATG]*",
-          "peaks": [
-            {
-              "allele": "7",
-              "height": 32415.0,
-              "size": 191.98
-            },
-            {
-              "allele": "9.3",
-              "height": 32136.0,
-              "size": 202.99
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "7",
+                "height": 32415.0,
+                "size": 191.98,
+                "relative_height": 100.0
+              },
+              {
+                "allele": "9.3",
+                "height": 32136.0,
+                "size": 202.99,
+                "relative_height": 99.14
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -676,7 +713,7 @@
       "dye": "B",
       "std_height": null,
       "height_limits": {
-        "min": 2500,
+        "min": 1500,
         "max": 50000
       },
       "variants": {
@@ -684,14 +721,18 @@
           "genotype": "8",
           "allele_count": 1,
           "motif": "[AATG]*",
-          "peaks": [
-            {
-              "allele": "8",
-              "height": 28327.0,
-              "size": 350.87
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "8",
+                "height": 28327.0,
+                "size": 350.87,
+                "relative_height": 100.0
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -701,7 +742,7 @@
       "dye": "B",
       "std_height": 749.5,
       "height_limits": {
-        "min": 2500,
+        "min": 1500,
         "max": 50000
       },
       "variants": {
@@ -709,19 +750,24 @@
           "genotype": "15/17",
           "allele_count": 2,
           "motif": "[TAGA]*[CAGA]*TAGA",
-          "peaks": [
-            {
-              "allele": "15",
-              "height": 29126.0,
-              "size": 173.79
-            },
-            {
-              "allele": "17",
-              "height": 27627.0,
-              "size": 181.71
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "15",
+                "height": 29126.0,
+                "size": 173.79,
+                "relative_height": 100.0
+              },
+              {
+                "allele": "17",
+                "height": 27627.0,
+                "size": 181.71,
+                "relative_height": 94.85
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     },
@@ -731,7 +777,7 @@
       "dye": "G",
       "std_height": null,
       "height_limits": {
-        "min": 5000,
+        "min": 500,
         "max": 50000
       },
       "variants": {
@@ -739,45 +785,67 @@
           "genotype": "X",
           "allele_count": 1,
           "motif": "null",
-          "peaks": [
-            {
-              "allele": "X",
-              "height": 31055.0,
-              "size": 100.73
-            }
-          ],
-          "contamination": null
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "X",
+                "height": 31055.0,
+                "size": 100.73,
+                "relative_height": 100.0
+              }
+            ],
+            "contamination_peaks": []
+          }
         }
       }
     }
   },
   "SampleParameters": {
-    "sample_id": "NA12878",
-    "analysis_date": "2025-05-01 16:38:12"
+    "SampleId": "NA12878",
+    "analysis_date": "2025-05-20 20:59:00"
   },
   "SampleContamination": {
-    "contamination_rate": 13.6,
+    "contamination_rate": 27.3,
     "contaminated_markers": [
+      {
+        "marker": "D19S433",
+        "main_profile": "12/14",
+        "contamination_peaks": "12.2(0.6%)",
+        "relative_distance": 0.37
+      },
       {
         "marker": "D1S1656",
         "main_profile": "15.3/14",
-        "contamination_peaks": "13.3(41.5%)",
-        "relative_distance": 0.43
+        "contamination_peaks": "13.3(0.4%), 16.3(0.1%)",
+        "relative_distance": 0.56
       },
       {
         "marker": "D2S1338",
         "main_profile": "17/20",
-        "contamination_peaks": "19.3(11.8%)",
-        "relative_distance": 0.13
+        "contamination_peaks": "19.3(0.1%)",
+        "relative_distance": 0.85
+      },
+      {
+        "marker": "D3S1358",
+        "main_profile": "16/17",
+        "contamination_peaks": "20.1(0.5%)",
+        "relative_distance": 0.42
       },
       {
         "marker": "D8S1179",
         "main_profile": "12/12",
-        "contamination_peaks": "11(21.7%)",
-        "relative_distance": 0.22
+        "contamination_peaks": "11(0.2%)",
+        "relative_distance": 0.78
+      },
+      {
+        "marker": "SE33",
+        "main_profile": "17/28.2",
+        "contamination_peaks": "16.3(0.3%)",
+        "relative_distance": 0.52
       }
     ],
     "total_valid_markers": 22,
-    "total_contaminated_markers": 3
+    "total_contaminated_markers": 6
   }
 }

@@ -1,13 +1,43 @@
 {
-  "LocusResults": {},
+  "LocusResults": {
+    "D8S1179": {
+      "allele_count": 1,
+      "median_height": 564.0,
+      "dye": "G",
+      "std_height": null,
+      "height_limits": {
+        "min": 500,
+        "max": 50000
+      },
+      "variants": {
+        "chr8_124894864_124894916": {
+          "genotype": "12",
+          "allele_count": 1,
+          "motif": "TCTATCTG[TCTA]*",
+          "peaks": {
+            "is_contaminated": false,
+            "main_profile_peaks": [
+              {
+                "allele": "12",
+                "height": 564.0,
+                "size": 144.57,
+                "relative_height": 100.0
+              }
+            ],
+            "contamination_peaks": []
+          }
+        }
+      }
+    }
+  },
   "SampleParameters": {
     "SampleId": "negative_control",
-    "analysis_date": "2025-05-01 16:38:11"
+    "analysis_date": "2025-05-20 20:59:00"
   },
   "SampleContamination": {
     "contamination_rate": 0.0,
     "contaminated_markers": [],
-    "total_valid_markers": 0,
+    "total_valid_markers": 1,
     "total_contaminated_markers": 0
   }
 }
