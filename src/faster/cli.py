@@ -118,6 +118,22 @@ def main():
         '-o', '--output',
         help='Output JSON file for comparison results'
     )
+
+    # Vector plot subcommand
+    vector_plot_parser = subparsers.add_parser(
+        'vector-plot',
+        help='Generate interactive vector plot from vector.json files'
+    )
+    vector_plot_parser.add_argument(
+        '-i', '--input_dir',
+        required=True,
+        help='Directory containing vector.json files'
+    )
+    vector_plot_parser.add_argument(
+        '-o', '--output_dir',
+        required=True,
+        help='Output directory for the vector plot'
+    )
     
     args = parser.parse_args()
     
@@ -141,6 +157,8 @@ def main():
             with open(args.output, 'w') as f:
                 json.dump(result.dict(), f, indent=2)
             logger.info(f"Comparison results saved to {args.output}")
+    elif args.command == 'vector-plot':
+        process_vector_plot(args)
 
 def process_str_analysis(args):
     """Process STR analysis command."""
@@ -386,6 +404,28 @@ def run_vectorize(args):
         
     except Exception as e:
         logging.error(f"Error during vectorization: {str(e)}")
+        sys.exit(1)
+
+def process_vector_plot(args):
+    """Process vector plot command."""
+    try:
+        from .reports.vector_report import VectorReport
+        
+        # Create output directory
+        output_dir = Path(args.output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Generate vector plot
+        vector_report = VectorReport(
+            vector_dir=args.input_dir,
+            output_dir=str(output_dir)
+        )
+        
+        plot_path = vector_report.generate_report()
+        logger.info(f"Vector plot generated and saved to: {plot_path}")
+        
+    except Exception as e:
+        logger.error(f"Error generating vector plot: {str(e)}")
         sys.exit(1)
 
 if __name__ == '__main__':

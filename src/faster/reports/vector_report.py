@@ -27,7 +27,7 @@ class VectorReport:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         # Find all vector.json files
-        vector_files = list(self.vector_dir.glob("*.vector.json"))
+        vector_files = list(self.vector_dir.glob("*.json"))
         
         if not vector_files:
             raise ValueError(f"No vector.json files found in {self.vector_dir}")
