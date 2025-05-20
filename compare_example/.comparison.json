@@ -102,24 +102,14 @@
       "marker": "D1S1656",
       "str_genotype": "14/15.3",
       "eh_genotype": "13.0/15.0"
-    },
-    {
-      "marker": "D21S11",
-      "str_genotype": "26/30",
-      "eh_genotype": "29.0/31.0"
     }
   ],
-  "missing_markers": [
-    {
-      "marker": "AMEL",
-      "str_genotype": "X"
-    }
-  ],
+  "missing_markers": [],
   "summary": {
-    "total_markers": 22,
+    "total_markers": 20,
     "matching": 19,
-    "mismatching": 2,
-    "missing": 1,
-    "match_ratio": 90.48
+    "mismatching": 1,
+    "missing": 0,
+    "match_ratio": 95.0
   }
 }

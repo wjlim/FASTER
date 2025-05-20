@@ -93,6 +93,14 @@ class ResultComparator:
             str_data = json.load(f)
         with open(eh_json_path) as f:
             eh_data = json.load(f)
+
+        # Get sample ID from STR data
+        sample_id = str_data.get("SampleParameters", {}).get("SampleId")
+        if not sample_id:
+            # Try to get sample ID from filename if not found in data
+            sample_id = Path(str_json_path).stem.split('.')[0]
+            logger.warning(f"SampleId not found in STR data, using filename: {sample_id}")
+
         # Load compare_markers from marker_info.json
         config_path = os.path.join(os.path.dirname(__file__), '../config/marker_info.json')
         with open(config_path) as f:
@@ -100,7 +108,7 @@ class ResultComparator:
             compare_markers = set(config.get('compare_markers', []))
 
         comparison_results = {
-            "sample_id": str_data["SampleParameters"]["SampleId"],
+            "sample_id": sample_id,
             "matching_markers": [],
             "mismatching_markers": [],
             "missing_markers": [],
@@ -111,6 +119,7 @@ class ResultComparator:
                 "missing": 0
             }
         }
+
         # Compare only markers in compare_markers
         for marker, str_info in str_data["LocusResults"].items():
             if marker not in compare_markers:
@@ -118,19 +127,46 @@ class ResultComparator:
             comparison_results["summary"]["total_markers"] += 1
             # Check if marker exists in ExpansionHunter results
             if marker not in eh_data["LocusResults"]:
+                str_variant = list(str_info["variants"].values())[0]
+                str_genotype = str_variant.get("genotype", "N/A")
                 comparison_results["missing_markers"].append({
                     "marker": marker,
-                    "str_genotype": str_info["variants"][list(str_info["variants"].keys())[0]]["genotype"]
+                    "str_genotype": str_genotype
                 })
                 comparison_results["summary"]["missing"] += 1
                 continue
+
             eh_info = eh_data["LocusResults"][marker]
             # Get STR genotype
             str_variant = list(str_info["variants"].values())[0]
-            str_genotype = str_variant["genotype"]
-            str_alleles = self._parse_genotype(str_genotype)
+            str_genotype = str_variant.get("genotype", "N/A")
+            try:
+                str_alleles = self._parse_genotype(str_genotype)
+            except (ValueError, TypeError):
+                logger.warning(f"Could not parse STR genotype for {marker}: {str_genotype}")
+                comparison_results["mismatching_markers"].append({
+                    "marker": marker,
+                    "str_genotype": str_genotype,
+                    "eh_genotype": "N/A",
+                    "error": "Invalid STR genotype format"
+                })
+                comparison_results["summary"]["mismatching"] += 1
+                continue
+
             # Get ExpansionHunter combined genotype
-            eh_alleles = self._combine_exhunter_genotypes(eh_info["Variants"])
+            try:
+                eh_alleles = self._combine_exhunter_genotypes(eh_info["Variants"])
+            except (KeyError, ValueError) as e:
+                logger.warning(f"Could not parse ExpansionHunter genotype for {marker}: {str(e)}")
+                comparison_results["mismatching_markers"].append({
+                    "marker": marker,
+                    "str_genotype": str_genotype,
+                    "eh_genotype": "N/A",
+                    "error": f"Invalid ExpansionHunter data: {str(e)}"
+                })
+                comparison_results["summary"]["mismatching"] += 1
+                continue
+
             # Compare genotypes
             if self._match_alleles(str_alleles, eh_alleles):
                 comparison_results["matching_markers"].append({
@@ -146,6 +182,7 @@ class ResultComparator:
                     "eh_genotype": f"{eh_alleles[0]}/{eh_alleles[1]}"
                 })
                 comparison_results["summary"]["mismatching"] += 1
+
         return comparison_results
 
     def save_results(self, results: Dict, output_prefix: str):

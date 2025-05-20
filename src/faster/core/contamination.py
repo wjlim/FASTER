@@ -188,7 +188,7 @@ class ContaminationDetector:
                 height=float(row['height']),
                 size=float(row['size']),
                 # Use pre-calculated relative_height if available, else calculate
-                relative_height=float(row.get('relative_height', row['height'] / max_height)) * 100
+                relative_height=float(row.get('relative_height', row['height'] / max_height))
             )
             for _, row in main_cluster.iterrows()
         ]
@@ -199,7 +199,7 @@ class ContaminationDetector:
                 allele=str(row['allele']),
                 height=float(row['height']),
                 size=float(row['size']),
-                relative_height=float(row.get('relative_height', row['height'] / max_height)) * 100
+                relative_height=float(row.get('relative_height', row['height'] / max_height))
             )
             for _, row in contamination_cluster.iterrows()
         ]

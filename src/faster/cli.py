@@ -262,16 +262,14 @@ def process_str_analysis(args):
                 # Genotype
                 genotype_row[marker] = variant_info.get('genotype', '')
                 # Main Profile
-                if variant_info.get('contamination') and variant_info['contamination'].get('main_profile_peaks'):
-                    main_profile = '/'.join(p['allele'] for p in variant_info['contamination']['main_profile_peaks'])
+                if variant_info.get('peaks') and variant_info['peaks'].get('main_profile_peaks'):
+                    main_profile = '/'.join(p['allele'] for p in variant_info['peaks']['main_profile_peaks'])
                 else:
-                    peaks = variant_info.get('peaks', [])
-                    sorted_peaks = sorted(peaks, key=lambda x: x['height'], reverse=True)
-                    main_profile = '/'.join(p['allele'] for p in sorted_peaks[:marker_data['allele_count']])
+                    main_profile = ''
                 main_profile_row[marker] = main_profile
                 # Contamination
                 contamination_row[marker] = (
-                    '1' if variant_info.get('contamination') and variant_info['contamination'].get('is_contaminated') else ''
+                    '1' if variant_info.get('peaks') and variant_info['peaks'].get('is_contaminated') else ''
                 )
             genotype_rows.append(genotype_row)
             main_profile_rows.append(main_profile_row)

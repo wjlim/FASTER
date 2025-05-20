@@ -121,15 +121,7 @@ Example of `{sample_name}.STR_analysis.json`:
           "genotype": str,
           "allele_count": int,
           "motif": str,
-          "peaks": [
-            {
-              "allele": str,
-              "height": float,
-              "size": float
-            },
-            // ...
-          ],
-          "contamination": {
+          "peaks": {
             "is_contaminated": bool,
             "main_profile_peaks": [
               {
@@ -148,9 +140,8 @@ Example of `{sample_name}.STR_analysis.json`:
                 "relative_height": float
               },
               // ...
-            ],
-            "relative_distance": float
-          } or null
+            ]
+          }
         }
       }
     }

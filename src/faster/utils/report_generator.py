@@ -221,6 +221,7 @@ class ReportGenerator:
     def _create_marker_info(self, marker_data: Dict[str, Any]) -> str:
         """Create HTML for marker information."""
         variant_info = marker_data["variants"][next(iter(marker_data["variants"]))]
+        peaks = variant_info.get('peaks', {})
         
         info_html = [
             '<div class="marker-info">',
@@ -233,22 +234,14 @@ class ReportGenerator:
         if marker_data["std_height"] is not None:
             info_html.append(f'<p><strong>Height StdDev:</strong> {round(marker_data["std_height"], 2)}</p>')
         
-        # Always show main profile information (all clustered alleles)
-        main_profile_alleles = None
-        if variant_info.get("contamination") and variant_info["contamination"] and variant_info["contamination"].get("main_profile_peaks"):
-            main_profile_alleles = [p["allele"] for p in variant_info["contamination"]["main_profile_peaks"]]
-        else:
-            # Use all alleles in peaks, sorted by height, up to the allele count
-            peaks = variant_info.get("peaks", [])
-            sorted_peaks = sorted(peaks, key=lambda x: x["height"], reverse=True)
-            main_profile_alleles = [p["allele"] for p in sorted_peaks[:marker_data["allele_count"]]]
-        
-        main_profile = "/".join(main_profile_alleles)
+        # Get main profile peaks
+        main_profile_peaks = peaks.get('main_profile_peaks', [])
+        main_profile = "/".join(p["allele"] for p in main_profile_peaks)
         info_html.append(f'<p><strong>Main Profile:</strong> {main_profile}</p>')
         
         # Show contamination details if present
-        if variant_info.get("contamination"):
-            contamination = variant_info["contamination"]
+        if peaks.get('is_contaminated'):
+            contamination_peaks = peaks.get('contamination_peaks', [])
             info_html.extend([
                 '<div class="marker-contamination">',
                 '<p><strong>Contamination Details:</strong></p>',
@@ -256,14 +249,13 @@ class ReportGenerator:
                 '<ul>'
             ])
             
-            for peak in contamination["contamination_peaks"]:
+            for peak in contamination_peaks:
                 info_html.append(
-                    f'<li>Allele {peak["allele"]}: {int(peak["height"])} RFU ({peak["relative_height"]:.3f})</li>'
+                    f'<li>Allele {peak["allele"]}: {int(peak["height"])} RFU ({peak["relative_height"]:.1f}%)</li>'
                 )
             
             info_html.extend([
                 '</ul>',
-                f'<p>Relative Distance: {contamination["relative_distance"]}</p>',
                 '</div>'
             ])
         

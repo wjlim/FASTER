@@ -123,7 +123,11 @@ class ResultGenerator:
                 "genotype": genotype,
                 "allele_count": stats["allele_count"],
                 "motif": self._get_motif(marker),
-                "peaks": peaks
+                "peaks": {
+                    "is_contaminated": False,
+                    "main_profile_peaks": [],
+                    "contamination_peaks": []
+                }
             }
             
             # Add contamination information if present
@@ -132,9 +136,10 @@ class ResultGenerator:
                 # Unpack tuple return value (contamination_info, join_points)
                 contamination = contamination_result[0] if isinstance(contamination_result, tuple) else contamination_result
                 
-                if contamination and contamination.is_contaminated:
-                    variant_info["contamination"] = {
-                        "is_contaminated": True,
+                # Always add main profile information if available
+                if contamination and contamination.main_profile_peaks:
+                    variant_info["peaks"] = {
+                        "is_contaminated": contamination.is_contaminated if contamination else False,
                         "main_profile_peaks": [
                             {
                                 "allele": p.allele,
@@ -152,22 +157,48 @@ class ResultGenerator:
                                 "relative_height": float(p.relative_height)
                             }
                             for p in contamination.contamination_peaks
-                        ],
-                        "relative_distance": contamination.relative_distance
+                        ] if contamination and contamination.is_contaminated else []
                     }
                     
-                    # Add to contaminated markers list
-                    contaminated_markers.append({
-                        "marker": marker,
-                        "main_profile": "/".join(p.allele for p in contamination.main_profile_peaks),
-                        "contamination_peaks": ", ".join(f"{p.allele}({p.relative_height:.1f}%)" 
-                                                       for p in contamination.contamination_peaks),
-                        "relative_distance": contamination.relative_distance
-                    })
+                    # Add to contaminated markers list only if actually contaminated
+                    if contamination and contamination.is_contaminated:
+                        contaminated_markers.append({
+                            "marker": marker,
+                            "main_profile": "/".join(p.allele for p in contamination.main_profile_peaks),
+                            "contamination_peaks": ", ".join(f"{p.allele}({p.relative_height:.1f}%)" 
+                                                           for p in contamination.contamination_peaks),
+                            "relative_distance": contamination.relative_distance
+                        })
                 else:
-                    variant_info["contamination"] = None
+                    # If no contamination info but we have peaks, use them as main profile
+                    variant_info["peaks"] = {
+                        "is_contaminated": False,
+                        "main_profile_peaks": [
+                            {
+                                "allele": p["allele"],
+                                "height": float(p["height"]),
+                                "size": float(p["size"]),
+                                "relative_height": float(p["height"] / sorted_peaks[0]["height"]) if sorted_peaks else 0
+                            }
+                            for p in sorted_peaks
+                        ],
+                        "contamination_peaks": []
+                    }
             else:
-                variant_info["contamination"] = None
+                # If no contamination info but we have peaks, use them as main profile
+                variant_info["peaks"] = {
+                    "is_contaminated": False,
+                    "main_profile_peaks": [
+                        {
+                            "allele": p["allele"],
+                            "height": float(p["height"]),
+                            "size": float(p["size"]),
+                            "relative_height": float(p["height"] / sorted_peaks[0]["height"]) if sorted_peaks else 0
+                        }
+                        for p in sorted_peaks
+                    ],
+                    "contamination_peaks": []
+                }
             
             # Create marker results
             marker_results = {
