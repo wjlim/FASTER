@@ -12,7 +12,7 @@ class JoinPoint(NamedTuple):
     joined_peaks: List[int]  # indices of peaks that were joined
 
 class ContaminationDetector:
-    def __init__(self, config_path=None):
+    def __init__(self, config_path=None, threshold: Optional[float] = None):
         """Initialize contamination detector with new parameters and dye cutoffs."""
         self.MAX_MAIN_PEAKS = 4  # Maximum number of peaks in main profile
         self.RELATIVE_DISTANCE_THRESHOLD = 0.3  # Maximum relative distance for main profile peaks
@@ -23,6 +23,7 @@ class ContaminationDetector:
         with open(config_path) as f:
             config = json.load(f)
             self.dye_cutoffs = config['dye_cutoffs']
+        self.threshold = threshold
 
     def _get_min_cutoff(self, dye):
         return self.dye_cutoffs.get(dye, {}).get('min', 0)
@@ -69,6 +70,10 @@ class ContaminationDetector:
             Tuple of (main_peaks, contamination_peaks, join_points, triggering_distance)
             triggering_distance is the relative distance that caused the first contamination, or None.
         """
+        peaks['min_cutoff'] = peaks['dye'].apply(self._get_min_cutoff)
+        if self.threshold is not None:
+            peaks['min_cutoff'] = peaks['height'].max() * self.threshold
+        peaks = peaks[peaks['height'] > peaks['min_cutoff']]
         if len(peaks) <= 1:
             return peaks, pd.DataFrame(), [], None
         
@@ -95,7 +100,7 @@ class ContaminationDetector:
             current_ref_peak = peaks.iloc[current_ref_idx]
             next_peak = peaks.iloc[i]
             dye = next_peak['dye'] if 'dye' in next_peak else 'B'
-            min_cutoff = self._get_min_cutoff(dye)
+            min_cutoff = next_peak['min_cutoff']  # Get the min_cutoff for the current peak
             relative_height_diff = (next_peak['height'] - min_cutoff) / (max_peak['height'] - min_cutoff)
             # Calculate relative distance to the *current reference* peak
             current_ref_height = current_ref_peak['height']

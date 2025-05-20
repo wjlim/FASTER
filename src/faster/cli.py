@@ -48,7 +48,9 @@ def main():
     str_parser.add_argument('-p', '--plotly',
                         action='store_true',
                         help='Generate interactive Plotly plots in HTML report')
-
+    str_parser.add_argument('-t', '--threshold',
+                        type=float,
+                        help='Threshold for contamination detection')
     # ExpansionHunter analysis subcommand
     exhunter_parser = subparsers.add_parser('exhunter', help='ExpansionHunter analysis help')
     exhunter_parser.add_argument('-i', '--input_bam',
@@ -155,7 +157,7 @@ def process_str_analysis(args):
     try:
         # Initialize components
         peak_caller = PeakCaller(config_path=args.config)
-        contamination_detector = ContaminationDetector()
+        contamination_detector = ContaminationDetector(config_path=args.config, threshold=args.threshold)
         result_generator = ResultGenerator(config_path=args.config)
         plotter = PeakPlotter(config_path=args.config)
         report_generator = ReportGenerator()
