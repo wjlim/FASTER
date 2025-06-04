@@ -55,36 +55,52 @@ class ResultComparator:
 
     def _match_alleles(self, str_alleles: Tuple[float, float], 
                       eh_alleles: Tuple[float, float], 
-                      tolerance: float = 0.5) -> bool:
-        """Check if alleles match within tolerance, considering rounding.
+                      tolerance: float = 0.5) -> float:
+        """Check if alleles match within tolerance, considering rounding,
+        and also check for single allele exact matches.
         
         Args:
-            str_alleles: Tuple of alleles from STR analysis
-            eh_alleles: Tuple of alleles from ExpansionHunter
-            tolerance: Maximum difference allowed for match
+            str_alleles: Tuple of alleles from STR analysis (sorted)
+            eh_alleles: Tuple of alleles from ExpansionHunter (sorted)
+            tolerance: Maximum difference allowed for full pair match
             
         Returns:
-            True if alleles match, False otherwise
+            1.0 if alleles form a full pair match (exact, rounded, ceiling, or tolerance).
+            0.5 if one allele from STR exactly matches one from ExpansionHunter.
+            0.0 otherwise.
         """
-        # Try exact match
+        # Check for full pair match (score 1.0)
+        # Exact match
         if str_alleles == eh_alleles:
-            return True
+            return 1.0
             
-        # Try rounding
+        # Rounded match
         str_rounded = tuple(sorted([round(x) for x in str_alleles]))
         eh_rounded = tuple(sorted([round(x) for x in eh_alleles]))
         if str_rounded == eh_rounded:
-            return True
+            return 1.0
             
-        # Try ceiling
+        # Ceiling match
         str_ceiling = tuple(sorted([math.ceil(x) for x in str_alleles]))
         eh_ceiling = tuple(sorted([math.ceil(x) for x in eh_alleles]))
         if str_ceiling == eh_ceiling:
-            return True
+            return 1.0
             
-        # Check within tolerance
-        return (abs(str_alleles[0] - eh_alleles[0]) <= tolerance and 
-                abs(str_alleles[1] - eh_alleles[1]) <= tolerance)
+        # Tolerance match for the pair
+        if (abs(str_alleles[0] - eh_alleles[0]) <= tolerance and 
+            abs(str_alleles[1] - eh_alleles[1]) <= tolerance):
+            return 1.0
+
+        # Check for single exact allele match (score 0.5)
+        # Alleles within tuples are already sorted by _parse_genotype and _combine_exhunter_genotypes
+        if (str_alleles[0] == eh_alleles[0] or
+            str_alleles[0] == eh_alleles[1] or
+            str_alleles[1] == eh_alleles[0] or
+            str_alleles[1] == eh_alleles[1]):
+            return 0.5
+            
+        # No match
+        return 0.0
 
     def compare_results(self, str_json_path: str, eh_json_path: str) -> Dict:
         """Compare STR analysis and ExpansionHunter results using only compare_markers from marker_info.json."""
@@ -113,10 +129,10 @@ class ResultComparator:
             "mismatching_markers": [],
             "missing_markers": [],
             "summary": {
-                "total_markers": 0,
-                "matching": 0,
-                "mismatching": 0,
-                "missing": 0
+                "total_markers": 0, # Markers from compare_markers list found in STR data
+                "matching": 0.0,    # Sum of match scores (0.5 or 1.0)
+                "mismatching": 0, # Count of 0-score markers
+                "missing": 0      # Markers from compare_markers not in EH data
             }
         }
 
@@ -124,8 +140,10 @@ class ResultComparator:
         for marker, str_info in str_data["LocusResults"].items():
             if marker not in compare_markers:
                 continue
+            
+            # Increment total_markers only if the marker from STR data is in our comparison list
             comparison_results["summary"]["total_markers"] += 1
-            # Check if marker exists in ExpansionHunter results
+
             if marker not in eh_data["LocusResults"]:
                 str_variant = list(str_info["variants"].values())[0]
                 str_genotype = str_variant.get("genotype", "N/A")
@@ -137,27 +155,28 @@ class ResultComparator:
                 continue
 
             eh_info = eh_data["LocusResults"][marker]
-            # Get STR genotype
             str_variant = list(str_info["variants"].values())[0]
             str_genotype = str_variant.get("genotype", "N/A")
+            
             try:
                 str_alleles = self._parse_genotype(str_genotype)
             except (ValueError, TypeError):
                 logger.warning(f"Could not parse STR genotype for {marker}: {str_genotype}")
+                # This counts as a mismatch as comparison cannot proceed reliably
                 comparison_results["mismatching_markers"].append({
                     "marker": marker,
                     "str_genotype": str_genotype,
-                    "eh_genotype": "N/A",
+                    "eh_genotype": "N/A", # EH genotype not parsed yet / irrelevant if STR is bad
                     "error": "Invalid STR genotype format"
                 })
                 comparison_results["summary"]["mismatching"] += 1
                 continue
 
-            # Get ExpansionHunter combined genotype
             try:
                 eh_alleles = self._combine_exhunter_genotypes(eh_info["Variants"])
             except (KeyError, ValueError) as e:
                 logger.warning(f"Could not parse ExpansionHunter genotype for {marker}: {str(e)}")
+                # This counts as a mismatch
                 comparison_results["mismatching_markers"].append({
                     "marker": marker,
                     "str_genotype": str_genotype,
@@ -167,35 +186,45 @@ class ResultComparator:
                 comparison_results["summary"]["mismatching"] += 1
                 continue
 
-            # Compare genotypes
-            if self._match_alleles(str_alleles, eh_alleles):
+            # Compare genotypes and get score
+            match_score = self._match_alleles(str_alleles, eh_alleles)
+
+            if match_score > 0:
                 comparison_results["matching_markers"].append({
                     "marker": marker,
                     "str_genotype": str_genotype,
-                    "eh_genotype": f"{eh_alleles[0]}/{eh_alleles[1]}"
+                    "eh_genotype": f"{eh_alleles[0]}/{eh_alleles[1]}", # Store combined EH genotype
+                    "match_score": match_score 
                 })
-                comparison_results["summary"]["matching"] += 1
-            else:
+                comparison_results["summary"]["matching"] += match_score
+            else: # match_score is 0
                 comparison_results["mismatching_markers"].append({
                     "marker": marker,
                     "str_genotype": str_genotype,
-                    "eh_genotype": f"{eh_alleles[0]}/{eh_alleles[1]}"
+                    "eh_genotype": f"{eh_alleles[0]}/{eh_alleles[1]}" # Store combined EH genotype
                 })
                 comparison_results["summary"]["mismatching"] += 1
-
+                
         return comparison_results
 
     def save_results(self, results: Dict, output_prefix: str):
-        """Save comparison results to JSON file.
+        """Save comparison results to JSON file and generate a text summary.
         
         Args:
             results: Comparison results dictionary
             output_prefix: Output file prefix
         """
-        # Calculate match ratio excluding missing markers
-        total_compared = results['summary']['matching'] + results['summary']['mismatching']
-        match_ratio = results['summary']['matching'] / total_compared if total_compared > 0 else 0
-        results['summary']['match_ratio'] = round(match_ratio * 100, 2)  # as percentage
+        markers_compared_for_score = results['summary']['total_markers'] - results['summary']['missing']
+        
+        sum_of_match_scores = results['summary']['matching']
+
+        if markers_compared_for_score > 0:
+            match_ratio = (sum_of_match_scores / markers_compared_for_score) * 100
+        else:
+            match_ratio = 0.0
+            
+        results['summary']['match_ratio'] = round(match_ratio, 2)  # as percentage
+        results['summary']['markers_compared_for_score'] = markers_compared_for_score # For clarity in JSON
         
         output_path = Path(f"{output_prefix}.comparison.json")
         with open(output_path, 'w') as f:
@@ -209,20 +238,29 @@ class ResultComparator:
             f.write("=" * 50 + "\n\n")
             
             f.write("Summary:\n")
-            f.write(f"Total markers analyzed: {total_compared}\n")
-            f.write(f"Matching: {results['summary']['matching']}\n")
-            f.write(f"Mismatching: {results['summary']['mismatching']}\n")
-            f.write(f"Match ratio: {results['summary']['match_ratio']}%\n")
-            f.write(f"Missing in ExpansionHunter: {results['summary']['missing']}\n\n")
+            f.write(f"Total markers from input list (in STR data): {results['summary']['total_markers']}\n")
+            f.write(f"Markers missing in ExpansionHunter: {results['summary']['missing']}\n")
+            f.write(f"Markers effectively compared: {markers_compared_for_score}\n") 
+            f.write(f"Sum of match scores (0.5 partial, 1.0 full): {results['summary']['matching']}\n") 
+            f.write(f"Completely mismatching markers (0 score): {results['summary']['mismatching']}\n") 
+            f.write(f"Overall match ratio: {results['summary']['match_ratio']}%\n\n")
             
+            if results['matching_markers']:
+                f.write("Matching/Partially Matching Markers (see .json for scores):\n")
+                for m in results['matching_markers']:
+                    score = m.get('match_score', 'N/A') 
+                    f.write(f"{m['marker']}: STR={m['str_genotype']}, EH={m['eh_genotype']}, Score={score}\n")
+                f.write("\n")
+
             if results['mismatching_markers']:
-                f.write("Mismatching Markers:\n")
+                f.write("Completely Mismatching Markers (0 score):\n") 
                 for mm in results['mismatching_markers']:
-                    f.write(f"{mm['marker']}: STR={mm['str_genotype']}, EH={mm['eh_genotype']}\n")
+                    error_info = f", Error: {mm['error']}" if 'error' in mm else ""
+                    f.write(f"{mm['marker']}: STR={mm['str_genotype']}, EH={mm['eh_genotype']}{error_info}\n")
                 f.write("\n")
                 
             if results['missing_markers']:
-                f.write("Markers not available in ExpansionHunter:\n")
+                f.write("Markers not available in ExpansionHunter (not scored):\n") 
                 for mm in results['missing_markers']:
                     f.write(f"{mm['marker']}: STR={mm['str_genotype']}\n")
                     
