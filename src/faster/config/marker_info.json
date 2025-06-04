@@ -118,6 +118,11 @@
         "D8S1179", "DYS391", "FGA", "SE33", "TH01",
         "TPOX", "vWA", "AMEL", "Yindel"
     ],
+    "sex_markers": {
+        "DYS391": {"type": "Y", "chromosome": "Y"},
+        "AMEL": {"type": "XY", "chromosome": "X,Y"},
+        "Yindel": {"type": "Y", "chromosome": "Y"}
+    },
     "vectorize_markers": [
         "CSF1PO", "D10S1248", "D12S391", "D13S317", "D16S539",
         "D1S1656", "D22S1045", "D2S1338", "D2S441",

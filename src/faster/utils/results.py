@@ -38,6 +38,7 @@ class ResultGenerator:
             }
             
         self.dye_cutoffs = config['dye_cutoffs']
+        self.sex_markers_config = config.get('sex_markers', {}) # Load sex_markers configuration
 
     def _calculate_stats(self, peaks: List[Dict]) -> Dict[str, Any]:
         """Calculate statistics for a group of peaks."""
@@ -63,6 +64,50 @@ class ResultGenerator:
         """Get the repeat motif for a marker."""
         return self.marker_info.get(marker, {}).get('motif', "[ATCT]*")
 
+    def _determine_sex(self, peaks_by_marker: Dict[str, pd.DataFrame]) -> str:
+        """
+        Determine sex based on the presence and genotype of sex-specific markers.
+
+        Args:
+            peaks_by_marker: Dictionary mapping marker names to peak DataFrames.
+
+        Returns:
+            str: "Male", "Female", or "Uncertain".
+        """
+        sex_calls = []
+
+        for marker_name, marker_props in self.sex_markers_config.items():
+            marker_data = peaks_by_marker.get(marker_name)
+            
+            if marker_props['type'] == 'Y':
+                if marker_data is not None and not marker_data.empty:
+                    sex_calls.append("Male") # Presence of Y marker indicates Male
+                else:
+                    sex_calls.append("Female") # Absence of Y marker indicates Female
+            elif marker_props['type'] == 'XY' and marker_name == "AMEL": # Specifically for AMEL
+                if marker_data is not None and not marker_data.empty:
+                    # Simplified genotype check for AMEL based on allele names
+                    # Assumes AMEL alleles are 'X' and 'Y' or similar.
+                    # A more robust check might involve looking at the actual genotype call if available.
+                    alleles = set(marker_data['allele'].astype(str).str.upper())
+                    if 'Y' in alleles and 'X' in alleles:
+                        sex_calls.append("Male")
+                    elif 'X' in alleles and 'Y' not in alleles : #Only X is present
+                        sex_calls.append("Female")
+                    # If only Y is present (unlikely for AMEL) or other combinations, it could be uncertain or an anomaly.
+                    # For now, if not clearly Male or Female, we don't add a call, letting the consensus logic handle it.
+
+        if not sex_calls:
+            return "Uncertain" # No sex marker data found
+
+        # Check for consensus
+        if all(call == "Male" for call in sex_calls):
+            return "Male"
+        elif all(call == "Female" for call in sex_calls):
+            return "Female"
+        else:
+            return "Uncertain" # Conflicting or insufficient data among markers
+
     def generate_results(self,
                         peaks_by_marker: Dict[str, pd.DataFrame],
                         contamination_by_marker: Dict[str, Any],
@@ -85,11 +130,15 @@ class ResultGenerator:
         contaminated_markers = []
         valid_markers = []
         
+        # Determine sex
+        determined_sex = self._determine_sex(peaks_by_marker)
+        
         results = {
             "LocusResults": {},
             "SampleParameters": {
                 "SampleId": clean_sample_name,
-                "analysis_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                "analysis_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "sex": determined_sex # Add determined sex
             }
         }
         
