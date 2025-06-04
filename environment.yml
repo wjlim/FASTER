@@ -2,6 +2,7 @@ name: faster
 channels:
   - conda-forge
   - defaults
+  - bioconda
 dependencies:
   - python>=3.10
   - pandas>=2.0.0
