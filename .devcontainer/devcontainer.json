@@ -3,5 +3,5 @@
   "image": "python:3.11-slim",
   "remoteUser": "root",
   "runArgs": ["--privileged"],
-  "postCreateCommand": ["pip install uv","uv venv", "source .venv/bin/activate", "uv pip install ."]
+  "postCreateCommand": "cd /workspaces/FASTER && pip install uv && uv venv && . .venv/bin/activate && uv pip install ."
 }
