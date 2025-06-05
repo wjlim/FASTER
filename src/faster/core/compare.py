@@ -131,7 +131,8 @@ class ResultComparator:
             "summary": {
                 "total_markers": 0, # Markers from compare_markers list found in STR data
                 "matching": 0.0,    # Sum of match scores (0.5 or 1.0)
-                "mismatching": 0, # Count of 0-score markers
+                "num_positive_score_markers": 0, # Count of markers with score > 0
+                "mismatching": 0, # Count of 0-score markers or parse errors
                 "missing": 0      # Markers from compare_markers not in EH data
             }
         }
@@ -197,6 +198,7 @@ class ResultComparator:
                     "match_score": match_score 
                 })
                 comparison_results["summary"]["matching"] += match_score
+                comparison_results["summary"]["num_positive_score_markers"] += 1
             else: # match_score is 0
                 comparison_results["mismatching_markers"].append({
                     "marker": marker,
@@ -232,18 +234,29 @@ class ResultComparator:
         logger.info(f"Comparison results saved to: {output_path}")
         
         # Generate summary report
+        num_pos_score_markers = results['summary'].get('num_positive_score_markers', 0)
+        num_mismatch_markers = results['summary']['mismatching']
+        num_missing_markers = results['summary']['missing']
+        total_markers_check = num_pos_score_markers + num_mismatch_markers + num_missing_markers
+
         summary_path = Path(f"{output_prefix}.comparison.txt")
         with open(summary_path, 'w') as f:
             f.write(f"Comparison Results for {results['sample_id']}\n")
             f.write("=" * 50 + "\n\n")
             
-            f.write("Summary:\n")
-            f.write(f"Total markers from input list (in STR data): {results['summary']['total_markers']}\n")
-            f.write(f"Markers missing in ExpansionHunter: {results['summary']['missing']}\n")
-            f.write(f"Markers effectively compared: {markers_compared_for_score}\n") 
-            f.write(f"Sum of match scores (0.5 partial, 1.0 full): {results['summary']['matching']}\n") 
-            f.write(f"Completely mismatching markers (0 score): {results['summary']['mismatching']}\n") 
-            f.write(f"Overall match ratio: {results['summary']['match_ratio']}%\n\n")
+            f.write("Overall Summary:\n")
+            f.write(f"Total markers from input list (found in STR data): {results['summary']['total_markers']}\n")
+            f.write(f"Markers missing in ExpansionHunter (not scored): {num_missing_markers}\n")
+            f.write(f"Markers effectively compared (scored or error): {markers_compared_for_score}\n") 
+            f.write(f"  Markers with positive score (full/partial match): {num_pos_score_markers}\n") 
+            f.write(f"    Sum of match scores for these markers: {results['summary']['matching']}\n") 
+            f.write(f"  Completely mismatching markers (0 score or error): {num_mismatch_markers}\n") 
+            f.write(f"Overall match ratio (sum of scores / effectively compared): {results['summary']['match_ratio']}%\n\n")
+            f.write("Counts Verification:\n")
+            f.write(f"  Positive score markers: {num_pos_score_markers}\n")
+            f.write(f"  Mismatch/Error markers: {num_mismatch_markers}\n")
+            f.write(f"  Missing in EH markers: {num_missing_markers}\n")
+            f.write(f"  Sum of counts: {total_markers_check} (Should equal Total markers from input list)\n\n")
             
             if results['matching_markers']:
                 f.write("Matching/Partially Matching Markers (see .json for scores):\n")
