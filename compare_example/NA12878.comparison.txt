@@ -1,13 +1,42 @@
 Comparison Results for NA12878
 ==================================================
 
-Summary:
-Total markers analyzed: 20
-Matching: 19
-Mismatching: 1
-Match ratio: 95.0%
-Missing in ExpansionHunter: 0
+Overall Summary:
+Total markers from input list (found in STR data): 20
+Markers missing in ExpansionHunter (not scored): 0
+Markers effectively compared (scored or error): 20
+  Markers with positive score (full/partial match): 19
+    Sum of match scores for these markers: 19.0
+  Completely mismatching markers (0 score or error): 1
+Overall match ratio (sum of scores / effectively compared): 95.0%
 
-Mismatching Markers:
+Counts Verification:
+  Positive score markers: 19
+  Mismatch/Error markers: 1
+  Missing in EH markers: 0
+  Sum of counts: 20 (Should equal Total markers from input list)
+
+Matching/Partially Matching Markers (see .json for scores):
+CSF1PO: STR=10/11, EH=10.0/11.0, Score=1.0
+D10S1248: STR=15/16, EH=15.0/16.0, Score=1.0
+D12S391: STR=16/17, EH=16.0/17.0, Score=1.0
+D13S317: STR=11/12, EH=11.0/12.0, Score=1.0
+D16S539: STR=10/11, EH=10.0/11.0, Score=1.0
+D18S51: STR=16/17, EH=16.0/17.0, Score=1.0
+D19S433: STR=12/14, EH=12.0/14.0, Score=1.0
+D22S1045: STR=13/15, EH=13.0/15.0, Score=1.0
+D2S1338: STR=17/20, EH=17.0/20.0, Score=1.0
+D2S441: STR=11/14, EH=11.0/14.0, Score=1.0
+D3S1358: STR=16/17, EH=16.0/17.0, Score=1.0
+D5S818: STR=12, EH=12.0/12.0, Score=1.0
+D7S820: STR=10/8, EH=8.0/10.0, Score=1.0
+D8S1179: STR=12/12, EH=12.0/12.0, Score=1.0
+FGA: STR=22/24, EH=22.0/24.0, Score=1.0
+SE33: STR=17/28.2, EH=17.0/29.0, Score=1.0
+TH01: STR=7/9.3, EH=7.0/10.0, Score=1.0
+TPOX: STR=8, EH=8.0/8.0, Score=1.0
+vWA: STR=15/17, EH=15.0/17.0, Score=1.0
+
+Completely Mismatching Markers (0 score):
 D1S1656: STR=14/15.3, EH=13.0/15.0
 

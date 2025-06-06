@@ -145,9 +145,10 @@ class ResultComparator:
             # Increment total_markers only if the marker from STR data is in our comparison list
             comparison_results["summary"]["total_markers"] += 1
 
+            str_variant = list(str_info["variants"].values())[0]
+            str_genotype = str_variant.get("genotype", "N/A")
+
             if marker not in eh_data["LocusResults"]:
-                str_variant = list(str_info["variants"].values())[0]
-                str_genotype = str_variant.get("genotype", "N/A")
                 comparison_results["missing_markers"].append({
                     "marker": marker,
                     "str_genotype": str_genotype
@@ -156,8 +157,17 @@ class ResultComparator:
                 continue
 
             eh_info = eh_data["LocusResults"][marker]
-            str_variant = list(str_info["variants"].values())[0]
-            str_genotype = str_variant.get("genotype", "N/A")
+
+            # Check for ExpansionHunter coverage
+            coverage = eh_info.get("Coverage")
+            if coverage is not None and coverage < 20:
+                comparison_results["missing_markers"].append({
+                    "marker": marker,
+                    "str_genotype": str_genotype,
+                    "reason": f"Low coverage in ExpansionHunter: {coverage}"
+                })
+                comparison_results["summary"]["missing"] += 1
+                continue
             
             try:
                 str_alleles = self._parse_genotype(str_genotype)
