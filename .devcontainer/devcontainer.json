@@ -1,7 +1,6 @@
 {
   "name": "fastest-pipeline",
   "image": "python:3.11-slim",
-  "remoteUser": "root",
   "runArgs": ["--privileged"],
-  "postCreateCommand": "cd /workspaces/FASTER && pip install uv && uv venv && . .venv/bin/activate && uv pip install . && source .venv/bin/activate"
+  "postCreateCommand": "cd /workspaces/FASTER && pip install uv"
 }

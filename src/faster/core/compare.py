@@ -161,11 +161,28 @@ class ResultComparator:
             # Check for ExpansionHunter coverage
             coverage = eh_info.get("Coverage")
             if coverage is not None and coverage < 20:
-                comparison_results["missing_markers"].append({
+                eh_genotype_for_report = "N/A"
+                comparison_error = None
+
+                try:
+                    # Try to get EH genotype even if coverage is low for informational purposes
+                    eh_alleles = self._combine_exhunter_genotypes(eh_info["Variants"])
+                    eh_genotype_for_report = f"{eh_alleles[0]}/{eh_alleles[1]}"
+                except (KeyError, ValueError) as e:
+                    logger.warning(f"Could not parse ExpansionHunter genotype for low-coverage marker {marker}: {str(e)}")
+                    comparison_error = f"Invalid ExpansionHunter data: {str(e)}"
+
+                missing_info = {
                     "marker": marker,
                     "str_genotype": str_genotype,
-                    "reason": f"Low coverage in ExpansionHunter: {coverage}"
-                })
+                    "eh_genotype": eh_genotype_for_report,
+                    "reason": f"Low coverage: {coverage}x"
+                }
+
+                if comparison_error:
+                    missing_info['error'] = comparison_error
+                
+                comparison_results["missing_markers"].append(missing_info)
                 comparison_results["summary"]["missing"] += 1
                 continue
             
