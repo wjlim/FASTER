@@ -7,15 +7,15 @@
       "LocusId": "TR1",
       "ReadLength": "",
       "Variants": {
-        "chrA_10001_10001": {
+        "chrA_10001_10061": {
           "CountsOfFlankingReads": "()",
           "CountsOfInrepeatReads": "()",
           "CountsOfSpanningReads": "(60, 15), (60, 14)",
           "Genotype": "0.0/0.0",
           "GenotypeConfidenceInterval": "59-59/60-60",
-          "ReferenceRegion": "chrA:10001-10001",
+          "ReferenceRegion": "chrA:10001-10061",
           "RepeatUnit": "CAG",
-          "VariantId": "chrA_10001_10001",
+          "VariantId": "chrA_10001_10061",
           "VariantSubtype": "Repeat",
           "VariantType": "Repeat"
         }
@@ -23,7 +23,7 @@
     }
   },
   "SampleParameters": {
-    "SampleId": "test",
+    "SampleId": "sample",
     "Sex": ""
   }
 }

@@ -83,8 +83,8 @@ faster trgt -i <input_bam> -r <reference_fasta> -o <output_prefix>
 # Run TRGT analysis with custom repeat annotation BED file
 faster trgt -i <input_bam> -r <reference_fasta> -b <repeat_annotation_bed> -o <output_prefix>
 
-# Run TRGT analysis and convert to ExpansionHunter JSON format
-faster trgt -i <input_bam> -r <reference_fasta> -o <output_prefix> --convert_to_json
+# Run TRGT analysis with custom sample ID
+faster trgt -i <input_bam> -r <reference_fasta> -o <output_prefix> --sample_id <sample_id>
 ```
 
 ### Compare Results
@@ -212,7 +212,7 @@ Output files:
 ### 3. TRGT Analysis (`faster trgt`)
 Output files:
 - `{output_prefix}.vcf.gz`: Variant calls in compressed VCF format
-- `{output_prefix}.json`: Analysis results in ExpansionHunter JSON format (when using `--convert_to_json`)
+- `{output_prefix}.json`: Analysis results in ExpansionHunter JSON format
 
 The JSON output format is identical to ExpansionHunter analysis, ensuring compatibility with existing comparison and vectorization modules.
 
