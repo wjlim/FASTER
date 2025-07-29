@@ -27,6 +27,12 @@ A robust tool for analyzing Short Tandem Repeat (STR) data from Thermofisher ele
   - Combined result reporting
   - **Marker filtering:** Only markers listed in `compare_markers` in `marker_info.json` are used for comparison.
 
+- **TRGT Integration**
+  - Analysis of PacBio HiFi BAM files using TRGT
+  - Tandem repeat genotyping from long-read sequencing data
+  - VCF output conversion to ExpansionHunter JSON format
+  - Compatible with existing comparison and vectorization modules
+
 - **Genotype Vectorization**
   - Convert genotypes to compact vector representation
   - Support for both STR and ExpansionHunter results
@@ -67,6 +73,18 @@ faster str -i <input_file> -o <output_directory> --config path/to/marker_info.js
 ```bash
 # Run ExpansionHunter analysis
 faster exhunter -i <input_bam> -r <reference_fasta> -o <output_prefix>
+```
+
+### TRGT Analysis
+```bash
+# Run TRGT analysis (uses default repeat annotation BED file)
+faster trgt -i <input_bam> -r <reference_fasta> -o <output_prefix>
+
+# Run TRGT analysis with custom repeat annotation BED file
+faster trgt -i <input_bam> -r <reference_fasta> -b <repeat_annotation_bed> -o <output_prefix>
+
+# Run TRGT analysis and convert to ExpansionHunter JSON format
+faster trgt -i <input_bam> -r <reference_fasta> -o <output_prefix> --convert_to_json
 ```
 
 ### Compare Results
@@ -191,7 +209,14 @@ Output files:
 }
 ```
 
-### 3. Results Comparison (`faster compare`)
+### 3. TRGT Analysis (`faster trgt`)
+Output files:
+- `{output_prefix}.vcf.gz`: Variant calls in compressed VCF format
+- `{output_prefix}.json`: Analysis results in ExpansionHunter JSON format (when using `--convert_to_json`)
+
+The JSON output format is identical to ExpansionHunter analysis, ensuring compatibility with existing comparison and vectorization modules.
+
+### 4. Results Comparison (`faster compare`)
 - **Now only compares markers listed in `compare_markers` in `marker_info.json`.**
 Output file: `{output_prefix}.comparison.json`
 ```json
@@ -210,7 +235,7 @@ Output file: `{output_prefix}.comparison.json`
 }
 ```
 
-### 4. Genotype Vectorization (`faster vectorize`)
+### 5. Genotype Vectorization (`faster vectorize`)
 Output file: `{output_file}.json`
 ```json
 {
@@ -237,7 +262,7 @@ Output file: `{output_file}.json`
 }
 ```
 
-### 5. Vector Comparison (`faster compare-vectors`)
+### 6. Vector Comparison (`faster compare-vectors`)
 Output file: `{output_file}.json`
 ```json
 {
@@ -275,3 +300,5 @@ For support and questions, please create an issue in the repository.
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 Note: This project uses ExpansionHunter binary which is licensed under the PolyForm Strict License 1.0.0. For more details about ExpansionHunter's license, please visit [ExpansionHunter's repository](https://github.com/Illumina/ExpansionHunter).
+
+This project also uses TRGT binary which is licensed under the PacBio Software License Agreement. For more details about TRGT's license, please visit [TRGT's repository](https://github.com/PacificBiosciences/trgt).

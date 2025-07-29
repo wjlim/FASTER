@@ -8,13 +8,6 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import re
 
-try:
-    import pysam
-    PYSAM_AVAILABLE = True
-except ImportError:
-    PYSAM_AVAILABLE = False
-    logging.warning("pysam not available. Falling back to manual VCF parsing.")
-
 logger = logging.getLogger(__name__)
 
 class TRGTAnalyzer:
@@ -588,82 +581,12 @@ class TRGTAnalyzer:
             if not Path(vcf_file).exists():
                 raise FileNotFoundError(f"VCF file not found: {vcf_file}")
             
-            # Use pysam if available, otherwise fall back to manual parsing
-            if PYSAM_AVAILABLE:
-                return self._parse_vcf_with_pysam(vcf_file)
-            else:
-                return self._parse_vcf_manual(vcf_file)
+            # Use manual parsing
+            return self._parse_vcf_manual(vcf_file)
                 
         except Exception as e:
             logger.error(f"Error parsing VCF file {vcf_file}: {str(e)}")
             raise
-    
-    def _parse_vcf_with_pysam(self, vcf_file: str) -> Dict:
-        """Parse VCF file using pysam.
-        
-        Args:
-            vcf_file: Path to the VCF file
-            
-        Returns:
-            Dictionary containing parsed VCF information
-        """
-        parsed_data = {
-            'header': {},
-            'variants': []
-        }
-        
-        try:
-            with pysam.VariantFile(vcf_file) as vcf:
-                # Parse header information
-                for header_line in str(vcf.header).split('\n'):
-                    if header_line.startswith('##INFO='):
-                        info_match = re.search(r'##INFO=<ID=(\w+),.*Description="([^"]*)"', header_line)
-                        if info_match:
-                            field_name = info_match.group(1)
-                            description = info_match.group(2)
-                            parsed_data['header'][f'INFO_{field_name}'] = description
-                    elif header_line.startswith('##FORMAT='):
-                        format_match = re.search(r'##FORMAT=<ID=(\w+),.*Description="([^"]*)"', header_line)
-                        if format_match:
-                            field_name = format_match.group(1)
-                            description = format_match.group(2)
-                            parsed_data['header'][f'FORMAT_{field_name}'] = description
-                
-                # Parse variants
-                for record in vcf:
-                    variant = {
-                        'CHROM': record.chrom,
-                        'POS': record.pos,
-                        'ID': record.id if record.id else '.',
-                        'REF': record.ref,
-                        'ALT': [str(alt) for alt in record.alts] if record.alts else [],
-                        'QUAL': record.qual if record.qual else '.',
-                        'FILTER': list(record.filter.keys()) if record.filter else [],
-                        'INFO': dict(record.info),
-                        'FORMAT': list(record.format.keys()),
-                        'SAMPLE': {}
-                    }
-                    
-                    # Parse sample data
-                    for sample in record.samples:
-                        sample_data = {}
-                        for fmt_key in record.format.keys():
-                            try:
-                                sample_data[fmt_key] = record.samples[sample][fmt_key]
-                            except (KeyError, IndexError):
-                                sample_data[fmt_key] = None
-                        variant['SAMPLE'] = sample_data
-                        break  # Only process first sample for now
-                    
-                    parsed_data['variants'].append(variant)
-            
-            logger.info(f"Successfully parsed {len(parsed_data['variants'])} variants from {vcf_file} using pysam")
-            return parsed_data
-            
-        except Exception as e:
-            logger.error(f"Error parsing VCF with pysam: {str(e)}")
-            logger.info("Falling back to manual parsing")
-            return self._parse_vcf_manual(vcf_file)
     
     def _parse_vcf_manual(self, vcf_file: str) -> Dict:
         """Parse VCF file manually (fallback method).

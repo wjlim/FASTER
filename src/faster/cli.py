@@ -64,7 +64,7 @@ def main():
                         required=True,
                         help='Output prefix for ExpansionHunter results')
     exhunter_parser.add_argument('-c', '--config',
-                        help='Path to marker configuration file (JSON)',
+                        help='Path to marker configuration file (default: src/faster/config/variant_catalog.thermofisher_24markers.json)',
                         default=f"{Path(__file__).parent}/config/variant_catalog.thermofisher_24markers.json")
     
     # TRGT analysis subcommand
@@ -76,8 +76,8 @@ def main():
                         required=True,
                         help='Path to the reference fasta file')
     trgt_parser.add_argument('-b', '--repeat_annotation_bed',
-                        required=True,
-                        help='Path to the repeat annotation BED file')
+                        help='Path to the repeat annotation BED file (default: src/faster/config/variant_catalog.bed)',
+                        default=f"{Path(__file__).parent}/config/variant_catalog.bed")
     trgt_parser.add_argument('-o', '--output_prefix',
                         required=True,
                         help='Output prefix for TRGT results')

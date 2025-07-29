@@ -22,8 +22,7 @@ dependencies = [
     "matplotlib>=3.7.0",
     "plotly>=5.13.0",
     "pydantic>=1.10.0,<3.0.0",
-    "openpyxl",
-    "pysam>=0.21.0"
+    "openpyxl"
 ]
 
 [project.urls]
