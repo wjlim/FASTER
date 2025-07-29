@@ -1,0 +1,21 @@
+{
+  "LocusResults": {
+    "D10S1248": {
+      "variants": {
+        "test": {
+          "genotype": "52/56"
+        }
+      }
+    },
+    "TH01": {
+      "variants": {
+        "test": {
+          "genotype": "24/39"
+        }
+      }
+    }
+  },
+  "SampleParameters": {
+    "SampleId": "test_str"
+  }
+}

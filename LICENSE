@@ -34,4 +34,16 @@ Third Party Software Licenses:
    PolyForm Strict License 1.0.0. Users of FASTER must comply with the terms and 
    conditions of the PolyForm Strict License when using the ExpansionHunter 
    functionality. For the complete license terms, please visit:
-   https://github.com/Illumina/ExpansionHunter/blob/master/LICENSE.txt 
+   https://github.com/Illumina/ExpansionHunter/blob/master/LICENSE.txt
+
+2. TRGT
+   - Located in: bin/trgt
+   - License: PacBio Software License Agreement
+   - Source: https://github.com/PacificBiosciences/trgt
+   - Copyright (c) 2024 Pacific Biosciences of California, Inc.
+
+   Note: The TRGT binary included in this project is subject to the PacBio 
+   Software License Agreement. Users of FASTER must comply with the terms and 
+   conditions of the PacBio Software License Agreement when using the TRGT 
+   functionality. For the complete license terms, please visit:
+   https://github.com/PacificBiosciences/trgt/blob/main/LICENSE.md 
