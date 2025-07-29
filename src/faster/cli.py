@@ -12,6 +12,7 @@ from .utils.results import ResultGenerator
 from .utils.report_generator import ReportGenerator
 from .core.compare import ResultComparator
 from .core.vectorizer import GenotypeVectorizer
+from .core.trgt import TRGTAnalyzer
 import os
 import stat
 
@@ -65,6 +66,30 @@ def main():
     exhunter_parser.add_argument('-c', '--config',
                         help='Path to marker configuration file (JSON)',
                         default=f"{Path(__file__).parent}/config/variant_catalog.thermofisher_24markers.json")
+    
+    # TRGT analysis subcommand
+    trgt_parser = subparsers.add_parser('trgt', help='TRGT analysis help')
+    trgt_parser.add_argument('-i', '--input_bam',
+                        required=True,
+                        help='Path to the input BAM file')
+    trgt_parser.add_argument('-r', '--reference',
+                        required=True,
+                        help='Path to the reference fasta file')
+    trgt_parser.add_argument('-b', '--repeat_annotation_bed',
+                        required=True,
+                        help='Path to the repeat annotation BED file')
+    trgt_parser.add_argument('-o', '--output_prefix',
+                        required=True,
+                        help='Output prefix for TRGT results')
+    trgt_parser.add_argument('-t', '--threads',
+                        type=int,
+                        default=4,
+                        help='Number of threads to use (default: 4)')
+    trgt_parser.add_argument('--convert_to_json',
+                        action='store_true',
+                        help='Convert TRGT VCF output to ExpansionHunter JSON format')
+    trgt_parser.add_argument('--sample_id',
+                        help='Sample ID for JSON conversion (default: extracted from filename)')
     # Compare results subcommand
     compare_parser = subparsers.add_parser('compare', help='Compare STR analysis and ExpansionHunter results')
     compare_parser.add_argument('-i', '--str_json',
@@ -141,6 +166,8 @@ def main():
         process_str_analysis(args)
     elif args.command == 'exhunter':
         process_exhunter_analysis(args)
+    elif args.command == 'trgt':
+        process_trgt_analysis(args)
     elif args.command == 'compare':
         process_compare(args)
     elif args.command == 'vectorize':
@@ -352,6 +379,45 @@ def process_exhunter_analysis(args):
             raise RuntimeError(f"ExpansionHunter failed. See logs above for details.")
         logger.info("ExpansionHunter analysis completed successfully")
         logger.info(f"Results saved to: {args.output_prefix}.*")
+        
+    except FileNotFoundError as e:
+        logger.error(f"Error: {str(e)}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        raise
+
+def process_trgt_analysis(args):
+    """Process TRGT analysis command."""
+    try:
+        # Initialize TRGT analyzer
+        trgt_analyzer = TRGTAnalyzer()
+        
+        # Run TRGT analysis
+        logger.info("Running TRGT analysis...")
+        vcf_file = trgt_analyzer.run_trgt_analysis(
+            input_bam=args.input_bam,
+            reference=args.reference,
+            repeat_annotation_bed=args.repeat_annotation_bed,
+            output_prefix=args.output_prefix,
+            threads=args.threads
+        )
+        
+        logger.info("TRGT analysis completed successfully")
+        logger.info(f"VCF results saved to: {vcf_file}")
+        
+        # Convert TRGT VCF to ExpansionHunter JSON if --convert_to_json is specified
+        if args.convert_to_json:
+            logger.info("Converting TRGT VCF to ExpansionHunter JSON format...")
+            sample_id = args.sample_id if args.sample_id else None
+            exhunter_json = trgt_analyzer.convert_vcf_to_exhunter_json(vcf_file, sample_id)
+            
+            # Save JSON output
+            json_output_path = Path(args.output_prefix + '.json')
+            with open(json_output_path, 'w') as f:
+                json.dump(exhunter_json, f, indent=2)
+            
+            logger.info(f"TRGT VCF converted to ExpansionHunter JSON: {json_output_path}")
         
     except FileNotFoundError as e:
         logger.error(f"Error: {str(e)}")

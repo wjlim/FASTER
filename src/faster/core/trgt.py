@@ -25,11 +25,11 @@ class TRGTAnalyzer:
         pass
     
     def run_trgt_analysis(self, 
-                         input_bam: str,
-                         reference: str,
-                         repeat_annotation_bed: str,
-                         output_prefix: str,
-                         threads: int = 4) -> str:
+                          input_bam: str,
+                          reference: str,
+                          repeat_annotation_bed: str,
+                          output_prefix: str,
+                          threads: int = 4) -> str:
         """Run TRGT genotype analysis.
         
         Args:
@@ -40,7 +40,7 @@ class TRGTAnalyzer:
             threads: Number of threads to use (default: 4)
             
         Returns:
-            Path to the generated VCF file
+            Path to the generated VCF file (gzipped)
             
         Raises:
             FileNotFoundError: If TRGT binary or input files not found
@@ -94,10 +94,13 @@ class TRGTAnalyzer:
                 logger.error(f"TRGT failed with exit code {result.returncode}")
                 raise RuntimeError(f"TRGT analysis failed. See logs above for details.")
             
-            # Check if VCF file was generated
-            vcf_file = f"{output_prefix}.vcf"
+            # Check if VCF file was generated (TRGT generates gzipped VCF by default)
+            vcf_file = f"{output_prefix}.vcf.gz"
             if not Path(vcf_file).exists():
-                raise RuntimeError(f"TRGT VCF file not generated: {vcf_file}")
+                # Try uncompressed VCF as fallback
+                vcf_file = f"{output_prefix}.vcf"
+                if not Path(vcf_file).exists():
+                    raise RuntimeError(f"TRGT VCF file not generated: {vcf_file}")
             
             logger.info("TRGT analysis completed successfully")
             logger.info(f"Results saved to: {vcf_file}")
@@ -210,6 +213,11 @@ class TRGTAnalyzer:
         for variant in variants:
             sample_data = variant.get('SAMPLE', {})
             sd_values = sample_data.get('SD', [])
+            
+            # Handle tuple format from pysam
+            if isinstance(sd_values, tuple):
+                sd_values = list(sd_values)
+            
             if isinstance(sd_values, list):
                 total_coverage += sum(int(x) for x in sd_values if str(x).isdigit())
             elif isinstance(sd_values, str):
@@ -267,7 +275,13 @@ class TRGTAnalyzer:
         
         # Extract repeat unit from MOTIFS
         motifs = variant['INFO'].get('MOTIFS', '')
-        repeat_unit = motifs.split(',')[0] if motifs else ""
+        # Handle both string and tuple formats
+        if isinstance(motifs, tuple):
+            repeat_unit = motifs[0] if motifs else ""
+        elif isinstance(motifs, str):
+            repeat_unit = motifs.split(',')[0] if motifs else ""
+        else:
+            repeat_unit = ""
         
         # Generate reference region
         chrom = variant['CHROM']
@@ -306,6 +320,10 @@ class TRGTAnalyzer:
         if gt == '.' or not gt:
             return "N/A"
         
+        # Handle tuple format from pysam
+        if isinstance(al, tuple):
+            al = list(al)
+        
         # If we have allele lengths, convert to repeat counts
         if al and isinstance(al, list) and len(al) >= 2:
             try:
@@ -337,6 +355,11 @@ class TRGTAnalyzer:
         """
         # First try to use MC (Motif Counts) field if available
         mc = sample_data.get('MC', [])
+        
+        # Handle tuple format from pysam
+        if isinstance(mc, tuple):
+            mc = list(mc)
+        
         if mc:
             try:
                 return self._parse_motif_counts(mc, allele_length, allele_index)
@@ -352,8 +375,24 @@ class TRGTAnalyzer:
                 except Exception as e:
                     logger.warning(f"Error parsing STRUC field: {str(e)}")
         
-        # Fallback to simple calculation based on motif length
-        # This is a simplified approach - for more accurate results, MC field should be used
+        # Fallback to calculation based on MOTIFS field
+        if variant_info:
+            motifs = variant_info.get('INFO', {}).get('MOTIFS', '')
+            if motifs:
+                # Handle both string and tuple formats
+                if isinstance(motifs, tuple):
+                    motif = motifs[0] if motifs else ""
+                elif isinstance(motifs, str):
+                    motif = motifs.split(',')[0] if motifs else ""
+                else:
+                    motif = ""
+                
+                if motif and motif != '.':
+                    motif_length = len(motif)
+                    if motif_length > 0:
+                        return float(allele_length) / motif_length
+        
+        # Final fallback to simple calculation based on average motif length
         return float(allele_length) / 4.0  # Assume average motif length of 4
 
     def _parse_motif_counts(self, mc_data, allele_length: int, allele_index: int = 0) -> float:
@@ -444,6 +483,12 @@ class TRGTAnalyzer:
             return "()"
         
         try:
+            # Handle tuple format from pysam
+            if isinstance(sd, tuple):
+                sd = list(sd)
+            if isinstance(al, tuple):
+                al = list(al)
+            
             if isinstance(sd, list) and isinstance(al, list):
                 pairs = []
                 for i, (span_count, allele_len) in enumerate(zip(sd, al)):
@@ -479,6 +524,12 @@ class TRGTAnalyzer:
             return "N/A-N/A/N/A-N/A"
         
         try:
+            # Handle tuple format from pysam
+            if isinstance(al, tuple):
+                al = list(al)
+            if isinstance(allr, tuple):
+                allr = list(allr)
+            
             if isinstance(al, list) and len(al) >= 2:
                 allele1 = al[0]
                 allele2 = al[1]

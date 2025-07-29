@@ -1,0 +1,29 @@
+{
+  "LocusResults": {
+    "TR1": {
+      "AlleleCount": 2,
+      "Coverage": 29,
+      "FragmentLength": "",
+      "LocusId": "TR1",
+      "ReadLength": "",
+      "Variants": {
+        "chrA_10001_10001": {
+          "CountsOfFlankingReads": "()",
+          "CountsOfInrepeatReads": "()",
+          "CountsOfSpanningReads": "(60, 15), (60, 14)",
+          "Genotype": "0.0/0.0",
+          "GenotypeConfidenceInterval": "59-59/60-60",
+          "ReferenceRegion": "chrA:10001-10001",
+          "RepeatUnit": "CAG",
+          "VariantId": "chrA_10001_10001",
+          "VariantSubtype": "Repeat",
+          "VariantType": "Repeat"
+        }
+      }
+    }
+  },
+  "SampleParameters": {
+    "SampleId": "test",
+    "Sex": ""
+  }
+}
