@@ -20,13 +20,25 @@ class ResultComparator:
             
         Returns:
             Tuple of (allele1, allele2) as floats
+            
+        Raises:
+            ValueError: If genotype is 'N/A' or contains invalid values
         """
+        # Check for invalid genotype values
+        if genotype == 'N/A' or genotype == 'N' or genotype == 'INVALID_GT' or not genotype or genotype == '.':
+            raise ValueError(f"Invalid genotype value: {genotype}")
+            
         if '/' in genotype:
             alleles = genotype.split('/')
+            # Check if any allele is invalid
+            if any(allele == 'N/A' or allele == 'N' or allele == 'INVALID_GT' or not allele or allele == '.' for allele in alleles):
+                raise ValueError(f"Invalid allele value in genotype: {genotype}")
             allele1 = float(alleles[0])
             allele2 = float(alleles[1])
         else:
             # Single allele case - homozygous
+            if genotype == 'N/A' or genotype == 'N' or genotype == 'INVALID_GT' or not genotype or genotype == '.':
+                raise ValueError(f"Invalid genotype value: {genotype}")
             allele1 = allele2 = float(genotype)
             
         return tuple(sorted([allele1, allele2]))
@@ -39,6 +51,9 @@ class ResultComparator:
             
         Returns:
             Combined genotype as (allele1, allele2)
+            
+        Raises:
+            ValueError: If any variant has invalid genotype values
         """
         total_allele1 = 0.0
         total_allele2 = 0.0
@@ -47,7 +62,12 @@ class ResultComparator:
             if 'Genotype' not in variant:
                 continue
                 
-            allele1, allele2 = self._parse_genotype(variant['Genotype'])
+            # Check for invalid genotype values
+            genotype = variant['Genotype']
+            if genotype == 'N/A' or genotype == 'N' or genotype == 'INVALID_GT' or not genotype or genotype == '.':
+                raise ValueError(f"Invalid ExpansionHunter genotype: {genotype}")
+                
+            allele1, allele2 = self._parse_genotype(genotype)
             total_allele1 += allele1
             total_allele2 += allele2
             
@@ -158,33 +178,8 @@ class ResultComparator:
 
             eh_info = eh_data["LocusResults"][marker]
 
-            # Check for ExpansionHunter coverage
+            # Get coverage for later use
             coverage = eh_info.get("Coverage")
-            if coverage is not None and coverage < 20:
-                eh_genotype_for_report = "N/A"
-                comparison_error = None
-
-                try:
-                    # Try to get EH genotype even if coverage is low for informational purposes
-                    eh_alleles = self._combine_exhunter_genotypes(eh_info["Variants"])
-                    eh_genotype_for_report = f"{eh_alleles[0]}/{eh_alleles[1]}"
-                except (KeyError, ValueError) as e:
-                    logger.warning(f"Could not parse ExpansionHunter genotype for low-coverage marker {marker}: {str(e)}")
-                    comparison_error = f"Invalid ExpansionHunter data: {str(e)}"
-
-                missing_info = {
-                    "marker": marker,
-                    "str_genotype": str_genotype,
-                    "eh_genotype": eh_genotype_for_report,
-                    "reason": f"Low coverage: {coverage}x"
-                }
-
-                if comparison_error:
-                    missing_info['error'] = comparison_error
-                
-                comparison_results["missing_markers"].append(missing_info)
-                comparison_results["summary"]["missing"] += 1
-                continue
             
             try:
                 str_alleles = self._parse_genotype(str_genotype)
@@ -204,20 +199,21 @@ class ResultComparator:
                 eh_alleles = self._combine_exhunter_genotypes(eh_info["Variants"])
             except (KeyError, ValueError) as e:
                 logger.warning(f"Could not parse ExpansionHunter genotype for {marker}: {str(e)}")
-                # This counts as a mismatch
-                comparison_results["mismatching_markers"].append({
+                # ExpansionHunter data problem: Add to missing markers
+                comparison_results["missing_markers"].append({
                     "marker": marker,
                     "str_genotype": str_genotype,
                     "eh_genotype": "N/A",
-                    "error": f"Invalid ExpansionHunter data: {str(e)}"
+                    "reason": f"Invalid ExpansionHunter data: {str(e)}"
                 })
-                comparison_results["summary"]["mismatching"] += 1
+                comparison_results["summary"]["missing"] += 1
                 continue
 
             # Compare genotypes and get score
             match_score = self._match_alleles(str_alleles, eh_alleles)
 
             if match_score > 0:
+                # Match score > 0: Add to matched markers (ignore low coverage)
                 comparison_results["matching_markers"].append({
                     "marker": marker,
                     "str_genotype": str_genotype,
@@ -227,12 +223,24 @@ class ResultComparator:
                 comparison_results["summary"]["matching"] += match_score
                 comparison_results["summary"]["num_positive_score_markers"] += 1
             else: # match_score is 0
-                comparison_results["mismatching_markers"].append({
-                    "marker": marker,
-                    "str_genotype": str_genotype,
-                    "eh_genotype": f"{eh_alleles[0]}/{eh_alleles[1]}" # Store combined EH genotype
-                })
-                comparison_results["summary"]["mismatching"] += 1
+                # Match score = 0: Check coverage to decide classification
+                if coverage is not None and coverage < 20:
+                    # Low coverage and no match: Add to missing markers
+                    comparison_results["missing_markers"].append({
+                        "marker": marker,
+                        "str_genotype": str_genotype,
+                        "eh_genotype": f"{eh_alleles[0]}/{eh_alleles[1]}",
+                        "reason": f"Low coverage: {coverage}x"
+                    })
+                    comparison_results["summary"]["missing"] += 1
+                else:
+                    # Adequate coverage but no match: Add to mismatching markers
+                    comparison_results["mismatching_markers"].append({
+                        "marker": marker,
+                        "str_genotype": str_genotype,
+                        "eh_genotype": f"{eh_alleles[0]}/{eh_alleles[1]}" # Store combined EH genotype
+                    })
+                    comparison_results["summary"]["mismatching"] += 1
                 
         return comparison_results
 

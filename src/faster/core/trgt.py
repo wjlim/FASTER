@@ -311,7 +311,7 @@ class TRGTAnalyzer:
         al = sample_data.get('AL', [])
         
         if gt == '.' or not gt:
-            return "N/A"
+            return "INVALID_GT"  # Changed from "N/A" to be more explicit
         
         # Handle tuple format from pysam
         if isinstance(al, tuple):
