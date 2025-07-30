@@ -75,7 +75,7 @@ class ResultComparator:
 
     def _match_alleles(self, str_alleles: Tuple[float, float], 
                       eh_alleles: Tuple[float, float], 
-                      tolerance: float = 0.5) -> float:
+                      tolerance: float = 0.7) -> float:
         """Check if alleles match within tolerance, considering rounding,
         and also check for single allele exact matches.
         
@@ -111,25 +111,14 @@ class ResultComparator:
             abs(str_alleles[1] - eh_alleles[1]) <= tolerance):
             return 1.0
 
-        # Check for single exact allele match (score 0.5)
-        # Alleles within tuples are already sorted by _parse_genotype and _combine_exhunter_genotypes
-        if (str_alleles[0] == eh_alleles[0] or
-            str_alleles[0] == eh_alleles[1] or
-            str_alleles[1] == eh_alleles[0] or
-            str_alleles[1] == eh_alleles[1]):
-            return 0.5
-            
-        # Check for single allele match within 0.9 margin (score 0.5)
-        # This is the "previous method" with 0.9 margin
-        margin_09 = 0.9
         str_allele1, str_allele2 = str_alleles
         eh_allele1, eh_allele2 = eh_alleles
-        
-        # Check if any STR allele matches any EH allele within 0.9 margin
-        if (abs(str_allele1 - eh_allele1) <= margin_09 or
-            abs(str_allele1 - eh_allele2) <= margin_09 or
-            abs(str_allele2 - eh_allele1) <= margin_09 or
-            abs(str_allele2 - eh_allele2) <= margin_09):
+
+        # Check if any STR allele matches any EH allele within tolerance
+        if (abs(str_allele1 - eh_allele1) <= tolerance or
+            abs(str_allele1 - eh_allele2) <= tolerance or
+            abs(str_allele2 - eh_allele1) <= tolerance or
+            abs(str_allele2 - eh_allele2) <= tolerance):
             return 0.5
             
         # No match
