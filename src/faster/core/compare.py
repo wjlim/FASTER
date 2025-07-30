@@ -111,14 +111,11 @@ class ResultComparator:
             abs(str_alleles[1] - eh_alleles[1]) <= tolerance):
             return 1.0
 
-        str_allele1, str_allele2 = str_alleles
-        eh_allele1, eh_allele2 = eh_alleles
-
         # Check if any STR allele matches any EH allele within tolerance
-        if (abs(str_allele1 - eh_allele1) <= tolerance or
-            abs(str_allele1 - eh_allele2) <= tolerance or
-            abs(str_allele2 - eh_allele1) <= tolerance or
-            abs(str_allele2 - eh_allele2) <= tolerance):
+        if (abs(str_alleles[0] - eh_alleles[0]) <= tolerance or
+            abs(str_alleles[0] - eh_alleles[1]) <= tolerance or
+            abs(str_alleles[1] - eh_alleles[0]) <= tolerance or
+            abs(str_alleles[1] - eh_alleles[1]) <= tolerance):
             return 0.5
             
         # No match
