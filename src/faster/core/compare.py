@@ -119,6 +119,19 @@ class ResultComparator:
             str_alleles[1] == eh_alleles[1]):
             return 0.5
             
+        # Check for single allele match within 0.9 margin (score 0.5)
+        # This is the "previous method" with 0.9 margin
+        margin_09 = 0.9
+        str_allele1, str_allele2 = str_alleles
+        eh_allele1, eh_allele2 = eh_alleles
+        
+        # Check if any STR allele matches any EH allele within 0.9 margin
+        if (abs(str_allele1 - eh_allele1) <= margin_09 or
+            abs(str_allele1 - eh_allele2) <= margin_09 or
+            abs(str_allele2 - eh_allele1) <= margin_09 or
+            abs(str_allele2 - eh_allele2) <= margin_09):
+            return 0.5
+            
         # No match
         return 0.0
 
