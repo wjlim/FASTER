@@ -94,10 +94,12 @@ class ResultGenerator:
                         sex_calls.append("Male")
                     elif 'X' in alleles and 'Y' not in alleles : #Only X is present
                         sex_calls.append("Female")
+                    else:
+                        sex_calls.append("Uncertain")
                     # If only Y is present (unlikely for AMEL) or other combinations, it could be uncertain or an anomaly.
                     # For now, if not clearly Male or Female, we don't add a call, letting the consensus logic handle it.
 
-        if not sex_calls:
+        if not sex_calls or peaks_by_marker.get("AMEL") is None:
             return "Uncertain" # No sex marker data found
 
         # Check for consensus
